@@ -31,10 +31,10 @@
             justify-content: center; gap: 10px; transition: 0.3s; position: relative;
         }
 
-        /* المان‌های مخفی مدیریت */
+        /* دایره بسیار مخفی */
         #admin-trigger {
             display: none; position: fixed; bottom: 10px; left: 10px;
-            width: 8px; height: 8px; background: rgba(255,255,255,0.05);
+            width: 8px; height: 8px; background: rgba(255,255,255,0.08);
             border-radius: 50%; cursor: pointer; z-index: 1000;
         }
 
@@ -53,7 +53,6 @@
             position: absolute; right: -8px; top: -8px; background: #ef4444;
             color: white; border-radius: 50%; width: 20px; height: 20px;
             border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 10px;
         }
 
         .add-btn {
@@ -80,8 +79,8 @@
     <div id="admin-trigger" onclick="toggleLoginBox()"></div>
     
     <div id="login-box">
-        <input type="text" id="u-field" autocomplete="off" placeholder="" onkeydown="if(event.key==='Enter')event.preventDefault()">
-        <input type="password" id="p-field" autocomplete="off" placeholder="" onkeydown="if(event.key==='Enter')event.preventDefault()">
+        <input type="password" id="u-field" autocomplete="off" placeholder="Username">
+        <input type="password" id="p-field" autocomplete="off" placeholder="Password">
     </div>
 
     <script>
@@ -93,33 +92,32 @@
             { title: 'اینستاگرام', url: '#', icon: 'fa-instagram', color: '#1e293b' }
         ];
 
+        // شورتکات فقط دایره را ظاهر می‌کند
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyL') {
-                e.preventDefault();
-                handleAdminAction();
+                const now = Date.now();
+                if (now < lockUntil) return;
+                document.getElementById('admin-trigger').style.display = 'block';
             }
         });
 
-        function handleAdminAction() {
-            const now = Date.now();
-            if (now < lockUntil) {
-                console.log("قفل امنیتی فعال است.");
-                return;
-            }
-
+        // کلیک روی دایره باکس را باز می‌کند
+        function toggleLoginBox() {
             const box = document.getElementById('login-box');
-            const trigger = document.getElementById('admin-trigger');
-
-            // اگر باکس باز است، یعنی کاربر می‌خواهد وارد شود
             if (box.style.display === 'flex') {
-                processLogin();
+                box.style.display = 'none';
             } else {
-                // اگر باکس بسته است، فقط نمایش دایره و باکس
-                trigger.style.display = 'block';
                 box.style.display = 'flex';
                 document.getElementById('u-field').focus();
             }
         }
+
+        // گوش دادن به کلید اینتر برای ورود
+        document.getElementById('login-box').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                processLogin();
+            }
+        });
 
         function processLogin() {
             const u = document.getElementById('u-field').value;
@@ -136,29 +134,23 @@
                 trigger.style.display = 'none';
                 renderLinks();
             } else {
-                // اشتباه وارد شده
                 failCount++;
                 localStorage.setItem('failCount', failCount);
                 
-                // پنهان سازی کامل
+                // پنهان سازی کامل در صورت اشتباه
                 box.style.display = 'none';
                 trigger.style.display = 'none';
                 document.getElementById('u-field').value = '';
                 document.getElementById('p-field').value = '';
 
-                if (failCount >= 2) {
-                    const blockTime = Date.now() + (5 * 60 * 1000); // 5 دقیقه
+                if (failCount >= 5) {
+                    const blockTime = Date.now() + (5 * 60 * 1000); 
                     localStorage.setItem('lockUntil', blockTime);
                     lockUntil = blockTime;
-                    failCount = 0; // ریست شمارنده بعد از قفل شدن
+                    failCount = 0; 
                     localStorage.setItem('failCount', 0);
                 }
             }
-        }
-
-        function toggleLoginBox() {
-            const box = document.getElementById('login-box');
-            box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
         }
 
         function renderLinks() {
