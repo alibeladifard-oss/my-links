@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه شخصی - مدیریت کامل</title>
+    <title>مدیریت لینک‌ها - نسخه نهایی</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -33,9 +33,10 @@
             margin-top: 60px; display: flex; flex-direction: column; align-items: center;
         }
 
+        /* حذف استروک آبی از پروفایل */
         .profile-img { 
             width: 100px; height: 100px; border-radius: 50%; 
-            margin-bottom: 15px; object-fit: cover; border: none;
+            margin-bottom: 15px; object-fit: cover; border: none !important;
         }
         
         .edit-mode .profile-img { cursor: pointer; opacity: 0.8; }
@@ -54,22 +55,21 @@
             color: white; text-decoration: none;
             padding: 12px 25px; border-radius: 12px; display: flex; align-items: center;
             justify-content: center; min-width: 150px; width: fit-content;
-            transition: 0.2s; cursor: pointer;
+            transition: 0.2s; cursor: pointer; border: none;
         }
 
+        /* آیکون دایره‌ای بدون استروک */
         .link-icon-circle {
             width: 45px; height: 45px; border-radius: 50%;
             background: var(--card-bg); overflow: hidden;
             display: flex; align-items: center; justify-content: center;
-            border: none; flex-shrink: 0;
+            border: none !important; flex-shrink: 0;
         }
 
         .link-icon-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .link-icon-circle i { font-size: 20px; color: var(--accent-color); }
 
-        /* استایل درگ کردن */
         .edit-mode .link-row { cursor: move; }
-        .dragging { opacity: 0.4; }
+        .dragging { opacity: 0.3; }
 
         #admin-trigger {
             display: none; position: fixed; bottom: 20px; left: 20px;
@@ -89,7 +89,7 @@
         }
 
         .delete-btn {
-            display: none; position: absolute; left: -35px; 
+            display: none; position: absolute; left: -40px; 
             background: #ef4444; color: white; border-radius: 50%;
             width: 22px; height: 22px; border: none; cursor: pointer;
             align-items: center; justify-content: center; font-size: 14px;
@@ -104,19 +104,19 @@
         .save-exit-btn { background: var(--success-color); margin-bottom: 50px; }
         .edit-mode .add-btn, .edit-mode .save-exit-btn { display: block; }
 
-        /* منوی کلیک راست سفارشی */
+        /* منوی کلیک راست حرفه‌ای */
         #custom-menu {
             display: none; position: fixed; background: #1e293b;
-            border: 1px solid #334155; border-radius: 8px; z-index: 10002;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); overflow: hidden; min-width: 150px;
+            border: 1px solid #475569; border-radius: 8px; z-index: 10002;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); overflow: hidden; min-width: 180px;
         }
         .menu-item {
-            padding: 10px 15px; color: white; cursor: pointer; font-size: 13px;
-            display: flex; align-items: center; gap: 10px; transition: 0.2s;
+            padding: 12px 15px; color: white; cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; gap: 10px; transition: 0.2s; border-bottom: 1px solid #334155;
         }
+        .menu-item:last-child { border-bottom: none; }
         .menu-item:hover { background: #334155; color: var(--accent-color); }
-        .menu-item i { width: 16px; text-align: center; }
-
+        
         #color-input, #font-color-input { display: none; }
     </style>
 </head>
@@ -126,8 +126,8 @@
 
     <div class="profile-container">
         <img id="p-img" src="https://via.placeholder.com/100" class="profile-img" onclick="editProfilePic()">
-        <h1 id="user-name" class="editable" onclick="editText('user-name')">نام شما</h1>
-        <p id="user-bio" class="editable" onclick="editText('user-bio')">توضیحات کوتاه</p>
+        <h1 id="user-name" onclick="editText('user-name')">نام شما</h1>
+        <p id="user-bio" onclick="editText('user-bio')">توضیحات کوتاه</p>
 
         <div id="links-container" class="links-wrapper"></div>
         
@@ -144,11 +144,11 @@
     </div>
 
     <div id="custom-menu">
-        <div class="menu-item" onclick="editExistingLink('title')"><i class="fas fa-edit"></i> تغییر عنوان</div>
+        <div class="menu-item" onclick="editExistingLink('title')"><i class="fas fa-font"></i> تغییر عنوان</div>
         <div class="menu-item" onclick="editExistingLink('url')"><i class="fas fa-link"></i> تغییر لینک</div>
         <div class="menu-item" onclick="editExistingLink('icon')"><i class="fas fa-image"></i> تغییر آیکون</div>
-        <div class="menu-item" onclick="triggerColor('bg')"><i class="fas fa-palette"></i> تغییر رنگ باکس</div>
-        <div class="menu-item" onclick="triggerColor('font')"><i class="fas fa-font"></i> تغییر رنگ فونت</div>
+        <div class="menu-item" onclick="triggerColor('bg')"><i class="fas fa-fill-drip"></i> تغییر رنگ باکس</div>
+        <div class="menu-item" onclick="triggerColor('font')"><i class="fas fa-tint"></i> تغییر رنگ فونت</div>
     </div>
 
     <input type="color" id="color-input" onchange="applyColor('bg', this.value)">
@@ -157,8 +157,8 @@
     <script>
         let isAdmin = false;
         let activeEditIndex = null;
-        let storedU = localStorage.getItem('adminU') || "100";
-        let storedP = localStorage.getItem('adminP') || "200";
+        let storedU = "100"; // می‌توانید از localStorage بگیرید
+        let storedP = "200";
 
         let profileData = JSON.parse(localStorage.getItem('profileData')) || {
             name: "نام شما", bio: "توضیحات کوتاه", img: "https://via.placeholder.com/100"
@@ -175,10 +175,11 @@
             renderLinks();
         }
 
+        // شورت‌کات ورود: Ctrl + Alt + Shift + L
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyL') {
                 const trg = document.getElementById('admin-trigger');
-                trg.style.display = (trg.style.display === 'block') ? 'none' : 'block';
+                trg.style.display = 'block';
             }
         });
 
@@ -192,6 +193,7 @@
                 document.getElementById('p-field').value === storedP) {
                 isAdmin = true;
                 document.body.classList.add('edit-mode');
+                document.getElementById('admin-bar').style.display = 'block';
                 document.getElementById('login-box').style.display = 'none';
                 renderLinks();
             }
@@ -200,6 +202,7 @@
         function exitEditMode() {
             isAdmin = false;
             document.body.classList.remove('edit-mode');
+            document.getElementById('admin-bar').style.display = 'none';
             localStorage.setItem('profileData', JSON.stringify({
                 name: document.getElementById('user-name').innerText,
                 bio: document.getElementById('user-bio').innerText,
@@ -216,11 +219,6 @@
                 row.className = 'link-row';
                 row.draggable = isAdmin;
 
-                // آیکون سمت راست
-                const iconCircle = document.createElement('div');
-                iconCircle.className = 'link-icon-circle';
-                iconCircle.innerHTML = link.icon ? `<img src="${link.icon}">` : `<i class="fas fa-link"></i>`;
-
                 // باکس لینک
                 const card = document.createElement('div');
                 card.className = 'link-card';
@@ -228,16 +226,19 @@
                 card.style.color = link.fontColor || '#ffffff';
                 card.innerHTML = `<span>${link.title}</span>`;
                 
+                // آیکون دایره‌ای در سمت راست
+                const iconCircle = document.createElement('div');
+                iconCircle.className = 'link-icon-circle';
+                iconCircle.innerHTML = link.icon ? `<img src="${link.icon}">` : `<i class="fas fa-link" style="color:var(--accent-color)"></i>`;
+
                 const delBtn = document.createElement('button');
                 delBtn.className = 'delete-btn';
                 delBtn.innerHTML = '×';
                 delBtn.onclick = (e) => removeLink(e, index);
 
-                card.onclick = () => { 
-                    if(!isAdmin) window.location.href = link.url;
-                };
+                card.onclick = () => { if(!isAdmin) window.location.href = link.url; };
 
-                // منوی کلیک راست جدید
+                // کلیک راست برای باز شدن منوی ۵ گزینه‌ای
                 card.oncontextmenu = (e) => {
                     if(!isAdmin) return;
                     e.preventDefault();
@@ -249,6 +250,7 @@
                     menu.style.left = e.clientX + 'px';
                 };
 
+                // درگ و دراپ
                 if(isAdmin) {
                     row.addEventListener('dragstart', () => row.classList.add('dragging'));
                     row.addEventListener('dragend', () => row.classList.remove('dragging'));
@@ -256,13 +258,13 @@
 
                 row.appendChild(delBtn);
                 row.appendChild(card);
-                row.appendChild(iconCircle); // اضافه شدن به انتهای ردیف (سمت راست)
+                row.appendChild(iconCircle); // آیکون سمت راست قرار گرفت
                 container.appendChild(row);
             });
         }
 
-        // توابع تغییر رنگ حرفه‌ای
         function triggerColor(type) {
+            closeMenu();
             if(type === 'bg') document.getElementById('color-input').click();
             else document.getElementById('font-color-input').click();
         }
@@ -274,12 +276,10 @@
         }
 
         function editExistingLink(field) {
+            closeMenu();
             const link = links[activeEditIndex];
-            let val;
-            if(field === 'title') val = prompt("عنوان جدید:", link.title);
-            if(field === 'url') val = prompt("آدرس جدید:", link.url);
-            if(field === 'icon') val = prompt("لینک تصویر آیکون:", link.icon);
-            
+            let msg = field === 'title' ? "عنوان جدید:" : (field === 'url' ? "آدرس جدید:" : "لینک تصویر آیکون:");
+            let val = prompt(msg, link[field] || "");
             if(val !== null) {
                 link[field] = val;
                 saveAndRefresh();
@@ -288,7 +288,7 @@
 
         function closeMenu() { document.getElementById('custom-menu').style.display = 'none'; }
 
-        // سایر توابع مدیریت
+        // جابه‌جایی با کشیدن و رها کردن
         const container = document.getElementById('links-container');
         container.addEventListener('dragover', e => {
             if(!isAdmin) return;
@@ -322,12 +322,12 @@
 
         function removeLink(e, index) {
             e.stopPropagation();
-            if(confirm("حذف؟")) { links.splice(index, 1); saveAndRefresh(); }
+            if(confirm("آیا از حذف این لینک مطمئن هستید؟")) { links.splice(index, 1); saveAndRefresh(); }
         }
 
         function saveAndRefresh() { localStorage.setItem('myLinks', JSON.stringify(links)); renderLinks(); }
-        function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس:", document.getElementById('p-img').src); if(n) document.getElementById('p-img').src = n; }
-        function editText(id) { if(!isAdmin) return; const v = prompt("متن:", document.getElementById(id).innerText); if(v) document.getElementById(id).innerText = v; }
+        function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس جدید:", document.getElementById('p-img').src); if(n) document.getElementById('p-img').src = n; }
+        function editText(id) { if(!isAdmin) return; const v = prompt("متن جدید:", document.getElementById(id).innerText); if(v) document.getElementById(id).innerText = v; }
 
         init();
     </script>
