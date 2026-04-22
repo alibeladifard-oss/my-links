@@ -29,12 +29,12 @@
             background-color: var(--card-bg); color: white; text-decoration: none;
             padding: 15px; border-radius: 12px; display: flex; align-items: center;
             justify-content: center; gap: 10px; transition: 0.3s; position: relative;
-            cursor: pointer;
         }
 
+        /* المان‌های مخفی مدیریت */
         #admin-trigger {
             display: none; position: fixed; bottom: 10px; left: 10px;
-            width: 8px; height: 8px; background: rgba(255,255,255,0.08);
+            width: 8px; height: 8px; background: rgba(255,255,255,0.05);
             border-radius: 50%; cursor: pointer; z-index: 1000;
         }
 
@@ -51,8 +51,9 @@
 
         .edit-mode .delete-btn {
             position: absolute; right: -8px; top: -8px; background: #ef4444;
-            color: white; border-radius: 50%; width: 22px; height: 22px;
+            color: white; border-radius: 50%; width: 20px; height: 20px;
             border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 10px;
         }
 
         .add-btn {
@@ -79,8 +80,8 @@
     <div id="admin-trigger" onclick="toggleLoginBox()"></div>
     
     <div id="login-box">
-        <input type="password" id="u-field" autocomplete="new-password" placeholder="1">
-        <input type="password" id="p-field" autocomplete="new-password" placeholder="2">
+        <input type="text" id="u-field" autocomplete="off" placeholder="" onkeydown="if(event.key==='Enter')event.preventDefault()">
+        <input type="password" id="p-field" autocomplete="off" placeholder="" onkeydown="if(event.key==='Enter')event.preventDefault()">
     </div>
 
     <script>
@@ -94,30 +95,31 @@
 
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyL') {
-                const now = Date.now();
-                if (now < lockUntil) return;
-                document.getElementById('admin-trigger').style.display = 'block';
+                e.preventDefault();
+                handleAdminAction();
             }
         });
 
-        function toggleLoginBox() {
+        function handleAdminAction() {
+            const now = Date.now();
+            if (now < lockUntil) {
+                console.log("قفل امنیتی فعال است.");
+                return;
+            }
+
             const box = document.getElementById('login-box');
+            const trigger = document.getElementById('admin-trigger');
+
+            // اگر باکس باز است، یعنی کاربر می‌خواهد وارد شود
             if (box.style.display === 'flex') {
-                box.style.display = 'none';
+                processLogin();
             } else {
+                // اگر باکس بسته است، فقط نمایش دایره و باکس
+                trigger.style.display = 'block';
                 box.style.display = 'flex';
-                setTimeout(() => document.getElementById('u-field').focus(), 50);
+                document.getElementById('u-field').focus();
             }
         }
-
-        // مدیریت فشردن اینتر در فیلدها
-        [document.getElementById('u-field'), document.getElementById('p-field')].forEach(input => {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    processLogin();
-                }
-            });
-        });
 
         function processLogin() {
             const u = document.getElementById('u-field').value;
@@ -125,7 +127,6 @@
             const box = document.getElementById('login-box');
             const trigger = document.getElementById('admin-trigger');
 
-            // بررسی دقیق یوزر و پسورد
             if (u === "beladifard" && p === "HldvUgd.1400") {
                 isAdmin = true;
                 failCount = 0;
@@ -135,22 +136,29 @@
                 trigger.style.display = 'none';
                 renderLinks();
             } else {
+                // اشتباه وارد شده
                 failCount++;
                 localStorage.setItem('failCount', failCount);
                 
+                // پنهان سازی کامل
                 box.style.display = 'none';
                 trigger.style.display = 'none';
                 document.getElementById('u-field').value = '';
                 document.getElementById('p-field').value = '';
 
-                if (failCount >= 5) {
-                    const blockTime = Date.now() + (5 * 60 * 1000); 
+                if (failCount >= 2) {
+                    const blockTime = Date.now() + (5 * 60 * 1000); // 5 دقیقه
                     localStorage.setItem('lockUntil', blockTime);
                     lockUntil = blockTime;
-                    failCount = 0; 
+                    failCount = 0; // ریست شمارنده بعد از قفل شدن
                     localStorage.setItem('failCount', 0);
                 }
             }
+        }
+
+        function toggleLoginBox() {
+            const box = document.getElementById('login-box');
+            box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
         }
 
         function renderLinks() {
@@ -166,11 +174,8 @@
                     ${isAdmin ? `<button class="delete-btn" onclick="removeLink(event, ${index})"><i class="fas fa-times"></i></button>` : ''}
                 `;
                 a.onclick = () => { 
-                    if(!isAdmin) {
-                        if(link.url !== "#") window.location.href = link.url;
-                    } else {
-                        editExistingLink(index);
-                    }
+                    if(!isAdmin) window.location.href = link.url;
+                    else editExistingLink(index);
                 };
                 container.appendChild(a);
             });
@@ -178,38 +183,28 @@
 
         function editText(id) {
             if(!isAdmin) return;
-            const el = document.getElementById(id);
-            const val = prompt("تغییر متن:", el.innerText);
-            if(val !== null) el.innerText = val;
+            const val = prompt("تغییر متن:", document.getElementById(id).innerText);
+            if(val) document.getElementById(id).innerText = val;
         }
 
         function addNewLink() {
             const t = prompt("عنوان:");
-            const u = prompt("آدرس کامل (مثلاً https://google.com):", "https://");
-            const i = prompt("آیکون (مانند fa-instagram یا fa-link):", "fa-link");
-            const c = prompt("رنگ باکس (مثلاً #1e293b):", "#1e293b");
-            if(t && u) { 
-                links.push({title:t, url:u, icon:i, color:c}); 
-                saveAndRefresh(); 
-            }
+            const u = prompt("آدرس:", "https://");
+            const i = prompt("آیکون (مثلا fa-link):", "fa-link");
+            const c = prompt("رنگ باکس:", "#1e293b");
+            if(t && u) { links.push({title:t, url:u, icon:i, color:c}); saveAndRefresh(); }
         }
 
         function removeLink(e, index) {
             e.stopPropagation();
-            if(confirm("آیا این مورد حذف شود؟")) { 
-                links.splice(index, 1); 
-                saveAndRefresh(); 
-            }
+            if(confirm("حذف؟")) { links.splice(index, 1); saveAndRefresh(); }
         }
 
         function editExistingLink(index) {
             const l = links[index];
-            const t = prompt("عنوان جدید:", l.title);
-            if(t !== null) {
-                const u = prompt("آدرس جدید:", l.url);
-                const i = prompt("آیکون جدید:", l.icon);
-                const c = prompt("رنگ جدید:", l.color);
-                links[index] = { title:t, url:u, icon:i, color:c };
+            const t = prompt("عنوان:", l.title);
+            if(t) {
+                links[index] = { title:t, url:prompt("آدرس:",l.url), icon:prompt("آیکون:",l.icon), color:prompt("رنگ:",l.color) };
                 saveAndRefresh();
             }
         }
