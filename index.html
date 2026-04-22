@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه شخصی - مدیریت رمز</title>
+    <title>صفحه شخصی - مدیریت پیشرفته</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -28,33 +28,44 @@
             position: fixed; top: 0; left: 0; z-index: 10001; font-weight: bold;
         }
 
-        .profile-container { text-align: center; width: 100%; max-width: 400px; margin-top: 50px; }
-        .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent-color); margin-bottom: 15px; }
+        .profile-container { text-align: center; width: 100%; max-width: 400px; margin-top: 60px; }
+        .profile-img { 
+            width: 100px; height: 100px; border-radius: 50%; 
+            border: 3px solid var(--accent-color); margin-bottom: 15px; 
+            object-fit: cover; cursor: default;
+        }
         
+        .edit-mode .profile-img { border: 3px dashed var(--accent-color); cursor: pointer; }
+
         .links-wrapper { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        
         .link-card {
             background-color: var(--card-bg); color: white; text-decoration: none;
             padding: 15px; border-radius: 12px; display: flex; align-items: center;
-            justify-content: center; gap: 10px; position: relative;
+            justify-content: center; gap: 10px; position: relative; transition: 0.2s;
         }
 
-        /* دایره ورود مخفی */
+        .link-card img { width: 24px; height: 24px; border-radius: 4px; }
+
+        /* استایل درگ کردن */
+        .edit-mode .link-card { cursor: move; border: 1px solid #334155; }
+        .dragging { opacity: 0.5; transform: scale(0.95); }
+
         #admin-trigger {
             display: none; position: fixed; bottom: 20px; left: 20px;
             width: 15px; height: 15px; background: rgba(255,255,255,0.2);
             border-radius: 50%; cursor: pointer; z-index: 9999;
         }
 
-        /* باکس ورود */
         #login-box {
             display: none; position: fixed; bottom: 45px; left: 20px;
             background: #1e293b; padding: 12px; border-radius: 8px;
             border: 1px solid #334155; flex-direction: column; gap: 8px; z-index: 10000;
         }
 
-        #login-box input, #settings-box input {
+        input {
             background: #0f172a; border: 1px solid #334155; color: white;
-            padding: 8px; border-radius: 4px; outline: none; width: 150px; font-size: 12px;
+            padding: 8px; border-radius: 4px; outline: none; font-size: 13px;
         }
 
         .action-btn {
@@ -62,51 +73,39 @@
             padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
         }
 
-        /* مربع تنظیمات در حالت ادیت */
-        #settings-trigger {
-            display: none; position: fixed; bottom: 20px; left: 20px;
-            width: 25px; height: 25px; background: #475569;
-            border-radius: 4px; cursor: pointer; z-index: 9999;
-            align-items: center; justify-content: center; color: white;
-        }
-
-        #settings-box {
-            display: none; position: fixed; bottom: 55px; left: 20px;
-            background: #1e293b; padding: 15px; border-radius: 8px;
-            border: 1px solid var(--accent-color); flex-direction: column; gap: 8px; z-index: 10000;
-        }
-
-        /* استایل‌های ویرایش */
-        .edit-mode #admin-bar, .edit-mode #settings-trigger { display: flex; }
-        .edit-mode .editable { border: 2px dashed var(--accent-color); padding: 5px; cursor: pointer; }
+        .edit-mode .editable { border: 1px dashed var(--accent-color); padding: 2px; }
         
         .delete-btn {
             display: none; position: absolute; right: -10px; top: -10px;
             background: #ef4444; color: white; border-radius: 50%;
-            width: 25px; height: 25px; border: none; cursor: pointer;
-            z-index: 100; align-items: center; justify-content: center;
+            width: 22px; height: 22px; border: none; cursor: pointer;
+            z-index: 100; align-items: center; justify-content: center; font-size: 14px;
         }
         .edit-mode .delete-btn { display: flex; }
 
-        .add-btn {
-            display: none; margin-top: 25px; background: var(--success-color);
-            border: none; padding: 15px; border-radius: 10px; cursor: pointer;
-            width: 100%; font-weight: bold; color: white;
+        .add-btn, .save-exit-btn {
+            display: none; margin-top: 15px; border: none; padding: 12px; 
+            border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; color: white;
         }
-        .edit-mode .add-btn { display: block; }
+        .add-btn { background: #475569; }
+        .save-exit-btn { background: var(--success-color); margin-bottom: 50px; }
+        
+        .edit-mode .add-btn, .edit-mode .save-exit-btn { display: block; }
     </style>
 </head>
 <body id="main-body">
 
-    <div id="admin-bar">✅ حالت ویرایش فعال شد</div>
+    <div id="admin-bar">حالت ویرایش فعال است</div>
 
     <div class="profile-container">
-        <img src="https://via.placeholder.com/100" class="profile-img">
+        <img id="p-img" src="https://via.placeholder.com/100" class="profile-img" onclick="editProfilePic()">
         <h1 id="user-name" class="editable" onclick="editText('user-name')">نام شما</h1>
         <p id="user-bio" class="editable" onclick="editText('user-bio')">توضیحات کوتاه</p>
 
         <div id="links-container" class="links-wrapper"></div>
+        
         <button class="add-btn" onclick="addNewLink()">+ افزودن لینک جدید</button>
+        <button class="save-exit-btn" onclick="exitEditMode()">ذخیره نهایی و خروج</button>
     </div>
 
     <div id="admin-trigger" onclick="toggleBox('login-box')"></div>
@@ -117,39 +116,28 @@
         <button class="action-btn" onclick="processLogin()">ورود</button>
     </div>
 
-    <div id="settings-trigger" onclick="toggleBox('settings-box')">
-        <i class="fas fa-cog"></i>
-    </div>
-
-    <div id="settings-box">
-        <div id="verify-step">
-            <p style="font-size: 10px; margin: 0;">تایید رمز فعلی:</p>
-            <input type="password" id="old-u" placeholder="رمز 1 فعلی">
-            <input type="password" id="old-p" placeholder="رمز 2 فعلی">
-            <button class="action-btn" onclick="verifyForChange()" style="margin-top:5px; width: 100%;">مرحله بعد</button>
-        </div>
-        <div id="new-creds-step" style="display: none;">
-            <p style="font-size: 10px; margin: 0;">رمز 1 جدید و تکرار:</p>
-            <input type="password" id="new-u1" placeholder="رمز 1 جدید">
-            <input type="password" id="new-u2" placeholder="تکرار رمز 1">
-            <hr style="width:100%; border:0; border-top:1px solid #334155;">
-            <p style="font-size: 10px; margin: 0;">رمز 2 جدید و تکرار:</p>
-            <input type="password" id="new-p1" placeholder="رمز 2 جدید">
-            <input type="password" id="new-p2" placeholder="تکرار رمز 2">
-            <button class="action-btn" onclick="saveNewCreds()" style="margin-top:5px; width: 100%; background: var(--success-color); color: white;">ذخیره نهایی</button>
-        </div>
-    </div>
-
     <script>
         let isAdmin = false;
-        
-        // دریافت رمزها از حافظه یا استفاده از مقادیر پیش‌فرض شما
         let storedU = localStorage.getItem('adminU') || "100";
         let storedP = localStorage.getItem('adminP') || "200";
 
+        let profileData = JSON.parse(localStorage.getItem('profileData')) || {
+            name: "نام شما",
+            bio: "توضیحات کوتاه",
+            img: "https://via.placeholder.com/100"
+        };
+
         let links = JSON.parse(localStorage.getItem('myLinks')) || [
-            { title: 'اینستاگرام', url: '#', color: '#1e293b' }
+            { title: 'اینستاگرام', url: 'https://instagram.com', icon: '', color: '#1e293b' }
         ];
+
+        // لود اولیه داده‌ها
+        function init() {
+            document.getElementById('user-name').innerText = profileData.name;
+            document.getElementById('user-bio').innerText = profileData.bio;
+            document.getElementById('p-img').src = profileData.img;
+            renderLinks();
+        }
 
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyL') {
@@ -164,71 +152,30 @@
         }
 
         function processLogin() {
-            const u = document.getElementById('u-field').value;
-            const p = document.getElementById('p-field').value;
-
-            if (u === storedU && p === storedP) {
+            if (document.getElementById('u-field').value === storedU && 
+                document.getElementById('p-field').value === storedP) {
                 isAdmin = true;
                 document.body.classList.add('edit-mode');
-                document.getElementById('login-box').style.display = 'none';
-                document.getElementById('admin-trigger').style.display = 'none';
+                toggleBox('login-box');
                 renderLinks();
-            } else {
-                document.getElementById('login-box').style.display = 'none';
-                document.getElementById('admin-trigger').style.display = 'none';
             }
         }
 
-        // بخش تغییر رمز
-        function verifyForChange() {
-            const ou = document.getElementById('old-u').value;
-            const op = document.getElementById('old-p').value;
-            if(ou === storedU && op === storedP) {
-                document.getElementById('verify-step').style.display = 'none';
-                document.getElementById('new-creds-step').style.display = 'flex';
-            } else {
-                alert("رمزهای فعلی اشتباه است.");
-            }
+        function exitEditMode() {
+            isAdmin = false;
+            document.body.classList.remove('edit-mode');
+            localStorage.setItem('profileData', JSON.stringify({
+                name: document.getElementById('user-name').innerText,
+                bio: document.getElementById('user-bio').innerText,
+                img: document.getElementById('p-img').src
+            }));
+            saveAndRefresh();
         }
 
-        function saveNewCreds() {
-            const nu1 = document.getElementById('new-u1').value;
-            const nu2 = document.getElementById('new-u2').value;
-            const np1 = document.getElementById('new-p1').value;
-            const np2 = document.getElementById('new-p2').value;
-
-            if(nu1 === nu2 && np1 === np2 && nu1 !== "" && np1 !== "") {
-                storedU = nu1;
-                storedP = np1;
-                localStorage.setItem('adminU', nu1);
-                localStorage.setItem('adminP', np1);
-                alert("رمزها با موفقیت تغییر کرد.");
-                toggleBox('settings-box');
-                // ریست فرم برای دفعه بعد
-                document.getElementById('verify-step').style.display = 'block';
-                document.getElementById('new-creds-step').style.display = 'none';
-            } else {
-                alert("خطا: رمزهای جدید با تکرارشان همخوانی ندارند یا خالی هستند.");
-            }
-        }
-
-        function renderLinks() {
-            const container = document.getElementById('links-container');
-            container.innerHTML = '';
-            links.forEach((link, index) => {
-                const div = document.createElement('div');
-                div.className = 'link-card';
-                div.style.backgroundColor = link.color;
-                div.innerHTML = `
-                    <span>${link.title}</span>
-                    <button class="delete-btn" onclick="removeLink(event, ${index})">×</button>
-                `;
-                div.onclick = () => { 
-                    if(isAdmin) editExistingLink(index);
-                    else if(link.url !== "#") window.location.href = link.url;
-                };
-                container.appendChild(div);
-            });
+        function editProfilePic() {
+            if(!isAdmin) return;
+            const newImg = prompt("لینک عکس پروفایل جدید را وارد کنید:", document.getElementById('p-img').src);
+            if(newImg) document.getElementById('p-img').src = newImg;
         }
 
         function editText(id) {
@@ -237,27 +184,88 @@
             if(val) document.getElementById(id).innerText = val;
         }
 
+        function renderLinks() {
+            const container = document.getElementById('links-container');
+            container.innerHTML = '';
+            links.forEach((link, index) => {
+                const div = document.createElement('div');
+                div.className = 'link-card';
+                div.draggable = isAdmin;
+                div.style.backgroundColor = link.color;
+                
+                let iconHtml = link.icon ? `<img src="${link.icon}">` : '';
+                div.innerHTML = `
+                    ${iconHtml}
+                    <span>${link.title}</span>
+                    <button class="delete-btn" onclick="removeLink(event, ${index})">×</button>
+                `;
+
+                div.onclick = () => { 
+                    if(isAdmin) editExistingLink(index);
+                    else window.location.href = link.url;
+                };
+
+                // رویدادهای درگ و دراپ
+                if(isAdmin) {
+                    div.addEventListener('dragstart', () => div.classList.add('dragging'));
+                    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+                }
+
+                container.appendChild(div);
+            });
+        }
+
+        // منطق جابه‌جایی (Sortable)
+        const container = document.getElementById('links-container');
+        container.addEventListener('dragover', e => {
+            if(!isAdmin) return;
+            e.preventDefault();
+            const draggingItem = document.querySelector('.dragging');
+            const siblings = [...container.querySelectorAll('.link-card:not(.dragging)')];
+            let nextSibling = siblings.find(sibling => {
+                return e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
+            });
+            container.insertBefore(draggingItem, nextSibling);
+        });
+
+        container.addEventListener('drop', () => {
+            if(!isAdmin) return;
+            // به‌روزرسانی آرایه بر اساس ترتیب جدید در DOM
+            const newOrder = [];
+            document.querySelectorAll('.link-card').forEach(card => {
+                const title = card.querySelector('span').innerText;
+                const found = links.find(l => l.title === title);
+                if(found) newOrder.push(found);
+            });
+            links = newOrder;
+        });
+
         function addNewLink() {
-            const t = prompt("عنوان:");
-            const u = prompt("آدرس:", "https://");
+            const title = prompt("عنوان لینک:");
+            const url = prompt("آدرس (URL):", "https://");
+            const icon = prompt("لینک آیکون (اختیاری):");
+            if(title && url) {
+                links.push({title, url, icon, color:'#1e293b'});
+                saveAndRefresh();
+            }
+        }
+
+        function editExistingLink(index) {
+            const t = prompt("۱. عنوان جدید:", links[index].title);
+            const u = prompt("۲. آدرس جدید:", links[index].url);
+            const i = prompt("۳. آیکون جدید (خالی برای حذف):", links[index].icon || "");
+            
             if(t && u) {
-                links.push({title:t, url:u, color:'#1e293b'});
+                links[index].title = t;
+                links[index].url = u;
+                links[index].icon = i;
                 saveAndRefresh();
             }
         }
 
         function removeLink(e, index) {
             e.stopPropagation();
-            if(confirm("حذف؟")) { links.splice(index, 1); saveAndRefresh(); }
-        }
-
-        function editExistingLink(index) {
-            const t = prompt("عنوان جدید:", links[index].title);
-            if(t) {
-                links[index].title = t;
-                links[index].url = prompt("آدرس جدید:", links[index].url);
-                saveAndRefresh();
-            }
+            if(confirm("حذف این لینک؟")) { links.splice(index, 1); saveAndRefresh(); }
         }
 
         function saveAndRefresh() {
@@ -265,7 +273,7 @@
             renderLinks();
         }
 
-        renderLinks();
+        init();
     </script>
 </body>
 </html>
