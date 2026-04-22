@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدیریت لینک‌های من</title>
+    <title>صفحه لینک‌ها</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -17,96 +17,108 @@
             font-family: Tahoma, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            margin: 0;
-            min-height: 100vh;
-            transition: all 0.3s;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; margin: 0; min-height: 100vh;
         }
 
-        .profile-container {
-            text-align: center;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .editable:hover { outline: 2px dashed var(--accent-color); cursor: pointer; }
-
-        .profile-img {
-            width: 100px; height: 100px;
-            border-radius: 50%; border: 3px solid var(--accent-color);
-            margin-bottom: 15px; object-fit: cover;
-        }
-
+        .profile-container { text-align: center; width: 100%; max-width: 400px; }
+        .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent-color); margin-bottom: 15px; object-fit: cover; }
         .links-wrapper { display: flex; flex-direction: column; gap: 15px; width: 100%; }
-
+        
         .link-card {
-            background-color: var(--card-bg);
-            color: white; text-decoration: none;
-            padding: 15px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            gap: 10px; transition: 0.3s; position: relative;
+            background-color: var(--card-bg); color: white; text-decoration: none;
+            padding: 15px; border-radius: 12px; display: flex; align-items: center;
+            justify-content: center; gap: 10px; transition: 0.3s; position: relative;
         }
 
-        .link-card:hover { transform: translateY(-3px); filter: brightness(1.2); }
+        /* دکمه مخفی مدیریت */
+        #admin-trigger {
+            display: none; position: fixed; bottom: 15px; left: 15px;
+            width: 12px; height: 12px; background: rgba(255,255,255,0.1);
+            border-radius: 50%; cursor: pointer; z-index: 1000;
+        }
 
-        /* پنل مدیریت مخفی */
-        #admin-panel {
-            display: none;
-            position: fixed; bottom: 20px; left: 20px;
-            background: #38bdf8; color: #000;
-            padding: 15px; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 1000;
+        /* باکس ورود */
+        #login-box {
+            display: none; position: fixed; bottom: 40px; left: 15px;
+            background: #1e293b; padding: 15px; border-radius: 10px;
+            border: 1px solid #334155; flex-direction: column; gap: 8px; z-index: 1001;
+        }
+
+        #login-box input {
+            background: #0f172a; border: 1px solid #334155; color: white;
+            padding: 8px; border-radius: 5px; outline: none;
         }
 
         .edit-mode .delete-btn {
-            position: absolute; right: -10px; top: -10px;
-            background: red; color: white; border-radius: 50%;
-            width: 25px; height: 25px; border: none; cursor: pointer;
+            position: absolute; right: -8px; top: -8px; background: #ef4444;
+            color: white; border-radius: 50%; width: 22px; height: 22px;
+            border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
 
         .add-btn {
-            display: none; margin-top: 20px;
-            background: var(--accent-color); border: none;
-            padding: 10px 20px; border-radius: 8px; cursor: pointer;
+            display: none; margin-top: 25px; background: var(--accent-color);
+            border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%;
+            font-weight: bold; color: #0f172a;
         }
 
         .edit-mode .add-btn { display: block; }
+        .editable { cursor: pointer; transition: 0.2s; }
+        .edit-mode .editable:hover { outline: 1px dashed var(--accent-color); }
     </style>
 </head>
 <body id="main-body">
 
-    <div class="profile-container" id="content">
-        <img src="https://via.placeholder.com/100" class="profile-img editable" id="profile-pic" onclick="editImage()">
+    <div class="profile-container">
+        <img src="https://via.placeholder.com/100" class="profile-img" id="profile-pic">
         <h1 id="user-name" class="editable" onclick="editText('user-name')">نام شما</h1>
-        <p id="user-bio" class="editable" onclick="editText('user-bio')">هنرمند دیجیتال</p>
+        <p id="user-bio" class="editable" onclick="editText('user-bio')">توضیحات کوتاه</p>
 
-        <div id="links-container" class="links-wrapper">
-            </div>
+        <div id="links-container" class="links-wrapper"></div>
 
         <button class="add-btn" onclick="addNewLink()">+ افزودن لینک جدید</button>
     </div>
 
-    <div id="admin-panel" onclick="toggleEditMode()">
-        <i class="fas fa-user-shield"></i> حالت ویرایش
+    <div id="admin-trigger" onclick="showLogin()"></div>
+    
+    <div id="login-box">
+        <input type="text" id="user-input" placeholder="">
+        <input type="password" id="pass-input" placeholder="">
+        <button onclick="checkLogin()" style="background: var(--accent-color); border:none; border-radius:5px; padding:5px; cursor:pointer;">ورود</button>
     </div>
 
     <script>
-        // برای امنیت ساده: کلید "L" را روی کیبورد بزنید تا دکمه ویرایش ظاهر شود
+        let isAdmin = false;
+        let links = JSON.parse(localStorage.getItem('myLinks')) || [
+            { title: 'اینستاگرام', url: '#', icon: 'fa-instagram', color: '#1e293b' }
+        ];
+
+        // شنود کلید ترکیبی Ctrl + Alt + Shift + L
         window.addEventListener('keydown', (e) => {
-            if(e.key.toLowerCase() === 'l') {
-                document.getElementById('admin-panel').style.display = 'block';
+            if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyL') {
+                document.getElementById('admin-trigger').style.display = 'block';
             }
         });
 
-        let isAdmin = false;
-        let links = JSON.parse(localStorage.getItem('myLinks')) || [
-            { id: 1, title: 'اینستاگرام', url: '#', icon: 'fa-instagram', color: '#1e293b' },
-            { id: 2, title: 'تلگرام', url: '#', icon: 'fa-paper-plane', color: '#1e293b' }
-        ];
+        function showLogin() {
+            const box = document.getElementById('login-box');
+            box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function checkLogin() {
+            const u = document.getElementById('user-input').value;
+            const p = document.getElementById('pass-input').value;
+            
+            if(u === 'beladifard' && p === 'HldvUgd.1400') {
+                isAdmin = true;
+                document.body.classList.add('edit-mode');
+                document.getElementById('login-box').style.display = 'none';
+                renderLinks();
+                alert("حالت ویرایش فعال شد.");
+            } else {
+                alert("اطلاعات نادرست است.");
+            }
+        }
 
         function renderLinks() {
             const container = document.getElementById('links-container');
@@ -117,40 +129,39 @@
                 a.style.backgroundColor = link.color;
                 a.innerHTML = `
                     <i class="fab ${link.icon}"></i>
-                    <span onclick="editLinkContent(${index})">${link.title}</span>
-                    ${isAdmin ? `<button class="delete-btn" onclick="removeLink(${index})">×</button>` : ''}
+                    <span>${link.title}</span>
+                    ${isAdmin ? `<button class="delete-btn" onclick="removeLink(${index})"><i class="fas fa-times"></i></button>` : ''}
                 `;
-                a.onclick = () => { if(!isAdmin) window.location.href = link.url; };
+                a.onclick = () => { 
+                    if(!isAdmin) window.location.href = link.url;
+                    else editExistingLink(index);
+                };
                 container.appendChild(a);
             });
         }
 
-        function toggleEditMode() {
-            isAdmin = !isAdmin;
-            document.body.classList.toggle('edit-mode');
-            alert(isAdmin ? "حالت ویرایش فعال شد. روی متن‌ها کلیک کنید." : "حالت ویرایش غیرفعال شد.");
-            renderLinks();
-        }
-
         function editText(id) {
             if(!isAdmin) return;
-            const newText = prompt("متن جدید را وارد کنید:", document.getElementById(id).innerText);
+            const newText = prompt("تغییر متن:", document.getElementById(id).innerText);
             if(newText) document.getElementById(id).innerText = newText;
         }
 
         function addNewLink() {
             const title = prompt("عنوان لینک:");
-            const url = prompt("آدرس (URL):", "https://");
-            const icon = prompt("کلاس آیکون FontAwesome (مثلا fa-link):", "fa-link");
-            const color = prompt("رنگ پس‌زمینه (کد هگز):", "#1e293b");
-            
-            links.push({ title, url, icon, color });
-            saveAndRefresh();
+            const url = prompt("آدرس URL:", "https://");
+            const icon = prompt("کد آیکون (مثلا fa-paper-plane):", "fa-link");
+            const color = prompt("کد رنگ (Hex):", "#1e293b");
+            if(title && url) {
+                links.push({ title, url, icon, color });
+                saveAndRefresh();
+            }
         }
 
         function removeLink(index) {
-            links.splice(index, 1);
-            saveAndRefresh();
+            if(confirm("آیا این لینک حذف شود؟")) {
+                links.splice(index, 1);
+                saveAndRefresh();
+            }
         }
 
         function saveAndRefresh() {
