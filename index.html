@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لینک‌های من</title>
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            background-color: #0f172a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .profile-container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #38bdf8;
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .links-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .link-card {
+            background-color: #1e293b;
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+
+        .link-card:hover {
+            background-color: #38bdf8;
+            color: #0f172a;
+            transform: translateY(-3px);
+        }
+
+        @media (max-width: 480px) {
+            .profile-container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-container">
+        <img src="your-image.jpg" alt="Profile" class="profile-img">
+        
+        <h1>نام شما یا برندتان</h1>
+        <p>هنرمند دیجیتال و طراح</p>
+
+        <div class="links-wrapper">
+            <a href="https://instagram.com/your-id" class="link-card">اینستاگرام</a>
+            <a href="https://t.me/your-id" class="link-card">تلگرام</a>
+            <a href="https://behance.net/your-id" class="link-card">نمونه کارها (Behance)</a>
+            <a href="mailto:yourname@email.com" class="link-card">ارسال ایمیل</a>
+        </div>
+    </div>
+
+</body>
+</html>
