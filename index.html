@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تست ورود و ویرایش</title>
+    <title>صفحه شخصی - مدیریت رمز</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -11,6 +11,7 @@
             --card-bg: #1e293b;
             --text-color: #ffffff;
             --accent-color: #38bdf8;
+            --success-color: #22c55e;
         }
 
         body {
@@ -22,7 +23,7 @@
         }
 
         #admin-bar {
-            display: none; width: 100%; background: #22c55e;
+            display: none; width: 100%; background: var(--success-color);
             color: white; text-align: center; padding: 10px 0;
             position: fixed; top: 0; left: 0; z-index: 10001; font-weight: bold;
         }
@@ -37,7 +38,7 @@
             justify-content: center; gap: 10px; position: relative;
         }
 
-        /* دایره کوچک */
+        /* دایره ورود مخفی */
         #admin-trigger {
             display: none; position: fixed; bottom: 20px; left: 20px;
             width: 15px; height: 15px; background: rgba(255,255,255,0.2);
@@ -51,37 +52,51 @@
             border: 1px solid #334155; flex-direction: column; gap: 8px; z-index: 10000;
         }
 
-        #login-box input {
+        #login-box input, #settings-box input {
             background: #0f172a; border: 1px solid #334155; color: white;
-            padding: 8px; border-radius: 4px; outline: none; width: 140px;
+            padding: 8px; border-radius: 4px; outline: none; width: 150px; font-size: 12px;
         }
 
-        .login-btn {
+        .action-btn {
             background: var(--accent-color); color: #000; border: none;
             padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
         }
 
+        /* مربع تنظیمات در حالت ادیت */
+        #settings-trigger {
+            display: none; position: fixed; bottom: 20px; left: 20px;
+            width: 25px; height: 25px; background: #475569;
+            border-radius: 4px; cursor: pointer; z-index: 9999;
+            align-items: center; justify-content: center; color: white;
+        }
+
+        #settings-box {
+            display: none; position: fixed; bottom: 55px; left: 20px;
+            background: #1e293b; padding: 15px; border-radius: 8px;
+            border: 1px solid var(--accent-color); flex-direction: column; gap: 8px; z-index: 10000;
+        }
+
         /* استایل‌های ویرایش */
-        .edit-mode #admin-bar { display: block; }
+        .edit-mode #admin-bar, .edit-mode #settings-trigger { display: flex; }
         .edit-mode .editable { border: 2px dashed var(--accent-color); padding: 5px; cursor: pointer; }
         
         .delete-btn {
             display: none; position: absolute; right: -10px; top: -10px;
             background: #ef4444; color: white; border-radius: 50%;
             width: 25px; height: 25px; border: none; cursor: pointer;
-            z-index: 100;
+            z-index: 100; align-items: center; justify-content: center;
         }
-        .edit-mode .delete-btn { display: flex; align-items: center; justify-content: center; }
+        .edit-mode .delete-btn { display: flex; }
 
         .add-btn {
-            display: none; margin-top: 25px; background: #22c55e;
+            display: none; margin-top: 25px; background: var(--success-color);
             border: none; padding: 15px; border-radius: 10px; cursor: pointer;
             width: 100%; font-weight: bold; color: white;
         }
         .edit-mode .add-btn { display: block; }
     </style>
 </head>
-<body>
+<body id="main-body">
 
     <div id="admin-bar">✅ حالت ویرایش فعال شد</div>
 
@@ -94,18 +109,46 @@
         <button class="add-btn" onclick="addNewLink()">+ افزودن لینک جدید</button>
     </div>
 
-    <div id="admin-trigger" onclick="toggleLoginBox()"></div>
+    <div id="admin-trigger" onclick="toggleBox('login-box')"></div>
     
     <div id="login-box">
         <input type="password" id="u-field" placeholder="1">
         <input type="password" id="p-field" placeholder="2">
-        <button class="login-btn" onclick="processLogin()">Login</button>
+        <button class="action-btn" onclick="processLogin()">ورود</button>
+    </div>
+
+    <div id="settings-trigger" onclick="toggleBox('settings-box')">
+        <i class="fas fa-cog"></i>
+    </div>
+
+    <div id="settings-box">
+        <div id="verify-step">
+            <p style="font-size: 10px; margin: 0;">تایید رمز فعلی:</p>
+            <input type="password" id="old-u" placeholder="رمز 1 فعلی">
+            <input type="password" id="old-p" placeholder="رمز 2 فعلی">
+            <button class="action-btn" onclick="verifyForChange()" style="margin-top:5px; width: 100%;">مرحله بعد</button>
+        </div>
+        <div id="new-creds-step" style="display: none;">
+            <p style="font-size: 10px; margin: 0;">رمز 1 جدید و تکرار:</p>
+            <input type="password" id="new-u1" placeholder="رمز 1 جدید">
+            <input type="password" id="new-u2" placeholder="تکرار رمز 1">
+            <hr style="width:100%; border:0; border-top:1px solid #334155;">
+            <p style="font-size: 10px; margin: 0;">رمز 2 جدید و تکرار:</p>
+            <input type="password" id="new-p1" placeholder="رمز 2 جدید">
+            <input type="password" id="new-p2" placeholder="تکرار رمز 2">
+            <button class="action-btn" onclick="saveNewCreds()" style="margin-top:5px; width: 100%; background: var(--success-color); color: white;">ذخیره نهایی</button>
+        </div>
     </div>
 
     <script>
         let isAdmin = false;
+        
+        // دریافت رمزها از حافظه یا استفاده از مقادیر پیش‌فرض شما
+        let storedU = localStorage.getItem('adminU') || "100";
+        let storedP = localStorage.getItem('adminP') || "200";
+
         let links = JSON.parse(localStorage.getItem('myLinks')) || [
-            { title: 'اینستاگرام', url: '#', icon: 'fa-instagram', color: '#1e293b' }
+            { title: 'اینستاگرام', url: '#', color: '#1e293b' }
         ];
 
         window.addEventListener('keydown', (e) => {
@@ -115,8 +158,8 @@
             }
         });
 
-        function toggleLoginBox() {
-            const box = document.getElementById('login-box');
+        function toggleBox(id) {
+            const box = document.getElementById(id);
             box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
         }
 
@@ -124,18 +167,48 @@
             const u = document.getElementById('u-field').value;
             const p = document.getElementById('p-field').value;
 
-            if (u === "100" && p === "200") {
+            if (u === storedU && p === storedP) {
                 isAdmin = true;
                 document.body.classList.add('edit-mode');
                 document.getElementById('login-box').style.display = 'none';
                 document.getElementById('admin-trigger').style.display = 'none';
                 renderLinks();
             } else {
-                // اگر اشتباه بود باکس غیب شود
                 document.getElementById('login-box').style.display = 'none';
                 document.getElementById('admin-trigger').style.display = 'none';
-                document.getElementById('u-field').value = '';
-                document.getElementById('p-field').value = '';
+            }
+        }
+
+        // بخش تغییر رمز
+        function verifyForChange() {
+            const ou = document.getElementById('old-u').value;
+            const op = document.getElementById('old-p').value;
+            if(ou === storedU && op === storedP) {
+                document.getElementById('verify-step').style.display = 'none';
+                document.getElementById('new-creds-step').style.display = 'flex';
+            } else {
+                alert("رمزهای فعلی اشتباه است.");
+            }
+        }
+
+        function saveNewCreds() {
+            const nu1 = document.getElementById('new-u1').value;
+            const nu2 = document.getElementById('new-u2').value;
+            const np1 = document.getElementById('new-p1').value;
+            const np2 = document.getElementById('new-p2').value;
+
+            if(nu1 === nu2 && np1 === np2 && nu1 !== "" && np1 !== "") {
+                storedU = nu1;
+                storedP = np1;
+                localStorage.setItem('adminU', nu1);
+                localStorage.setItem('adminP', np1);
+                alert("رمزها با موفقیت تغییر کرد.");
+                toggleBox('settings-box');
+                // ریست فرم برای دفعه بعد
+                document.getElementById('verify-step').style.display = 'block';
+                document.getElementById('new-creds-step').style.display = 'none';
+            } else {
+                alert("خطا: رمزهای جدید با تکرارشان همخوانی ندارند یا خالی هستند.");
             }
         }
 
