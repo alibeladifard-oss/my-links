@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه شخصی | نسخه ابری</title>
+    <title>صفحه شخصی | مدیریت ابری</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -32,32 +32,33 @@
             width: 45px; height: 45px; border-radius: 50%; background: rgba(255, 255, 255, 0.05);
             overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        .edit-mode .link-icon-circle { cursor: pointer; border: 1px dashed var(--accent-color); }
+        .edit-mode .link-icon-circle:hover { background: rgba(255, 255, 255, 0.15); border: 1px dashed var(--accent-color); cursor: pointer; }
         .link-icon-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .edit-controls { display: none; flex-direction: column; gap: 10px; width: 220px; margin-top: 30px; }
+        .edit-controls { display: none; flex-direction: column; gap: 10px; width: 220px; margin-top: 30px; margin-bottom: 50px; }
         .edit-mode .edit-controls { display: flex; }
-        .control-btn { border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; }
+        .control-btn { border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
         .save-btn { background: var(--success-color); }
         .add-btn { background: #475569; }
         #custom-menu {
             display: none; position: fixed; background: #1e293b; border: 1px solid #475569;
             border-radius: 8px; z-index: 10002; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 180px;
         }
-        .menu-item { padding: 12px 15px; color: white; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #334155; }
+        .menu-item { padding: 12px 15px; color: white; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #334155; text-align: right; }
+        .menu-item:hover { background: #334155; color: var(--accent-color); }
         #admin-trigger { display: none; position: fixed; bottom: 20px; left: 20px; width: 15px; height: 15px; background: rgba(255,255,255,0.1); border-radius: 50%; cursor: pointer; z-index: 9999; }
         #login-box { display: none; position: fixed; bottom: 45px; left: 20px; background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; flex-direction: column; gap: 8px; }
         #color-input, #font-color-input { display: none; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 20000; display: none; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 20000; display: none; color: white; }
     </style>
 </head>
 <body onclick="closeMenu()">
 
-    <div id="loading-overlay">در حال همگام‌سازی با ابر...</div>
+    <div id="loading-overlay">در حال همگام‌سازی...</div>
     <div id="admin-bar">حالت ویرایش فعال (ذخیره مستقیم در ابر)</div>
 
     <div class="profile-container">
         <img id="p-img" src="https://via.placeholder.com/100" class="profile-img" onclick="editProfilePic()">
-        <p id="user-bio" onclick="editText('user-bio')">در حال بارگذاری...</p>
+        <p id="user-bio" onclick="editText('user-bio')" style="cursor: pointer;">در حال بارگذاری...</p>
 
         <div id="links-container" class="links-wrapper"></div>
         
@@ -76,11 +77,11 @@
     </div>
 
     <div id="custom-menu" onclick="event.stopPropagation()">
-        <div class="menu-item" onclick="editExistingLink('title')">تغییر عنوان</div>
-        <div class="menu-item" onclick="editExistingLink('url')">تغییر لینک</div>
-        <div class="menu-item" onclick="triggerColor('bg')">رنگ باکس</div>
-        <div class="menu-item" onclick="triggerColor('font')">رنگ متن</div>
-        <div class="menu-item" style="color:var(--danger-color)" onclick="deleteLink()">حذف باکس</div>
+        <div class="menu-item" onclick="editExistingLink('title')"><i class="fas fa-font"></i> تغییر عنوان</div>
+        <div class="menu-item" onclick="editExistingLink('url')"><i class="fas fa-link"></i> تغییر لینک</div>
+        <div class="menu-item" onclick="triggerColor('bg')"><i class="fas fa-fill-drip"></i> تغییر رنگ باکس</div>
+        <div class="menu-item" onclick="triggerColor('font')"><i class="fas fa-tint"></i> تغییر رنگ متن</div>
+        <div class="menu-item" style="color:var(--danger-color)" onclick="deleteLink()"><i class="fas fa-trash"></i> حذف باکس</div>
     </div>
 
     <input type="color" id="color-input" onchange="applyColor('bg', this.value)">
@@ -92,7 +93,7 @@
         
         let isAdmin = false;
         let activeEditIndex = null;
-        let cloudData = { profile: { bio: "نام و بیوگرافی شما", img: "https://via.placeholder.com/100" }, links: [] };
+        let cloudData = { profile: { bio: "بیوگرافی شما", img: "https://via.placeholder.com/100" }, links: [] };
 
         async function loadFromCloud() {
             try {
@@ -102,7 +103,7 @@
                 const json = await res.json();
                 cloudData = json.record;
                 renderUI();
-            } catch (e) { alert("خطا در بارگذاری اطلاعات از ابر"); }
+            } catch (e) { console.error(e); }
         }
 
         function renderUI() {
@@ -113,35 +114,45 @@
             cloudData.links.forEach((link, index) => {
                 const row = document.createElement('div');
                 row.className = 'link-row';
-                row.innerHTML = `
-                    <div class="link-card" style="background:${link.color}; color:${link.fontColor}" onclick="handleLinkClick(${index}, event)">
-                        <span>${link.title}</span>
-                    </div>
-                    <div class="link-icon-circle" onclick="handleIconClick(${index}, event)">
-                        ${link.icon ? `<img src="${link.icon}">` : ''}
-                    </div>
-                `;
+                row.oncontextmenu = (e) => e.preventDefault(); // غیرفعال کردن راست کلیک
+
+                const card = document.createElement('div');
+                card.className = 'link-card';
+                card.style.backgroundColor = link.color || '#1e293b';
+                card.style.color = link.fontColor || '#ffffff';
+                card.innerHTML = `<span>${link.title}</span>`;
+                
+                card.onclick = (e) => {
+                    if (isAdmin) {
+                        e.stopPropagation();
+                        activeEditIndex = index;
+                        const menu = document.getElementById('custom-menu');
+                        menu.style.display = 'block';
+                        menu.style.top = e.clientY + 'px';
+                        menu.style.left = e.clientX + 'px';
+                    } else {
+                        let targetUrl = link.url;
+                        if (!/^https?:\/\//i.test(targetUrl)) targetUrl = 'https://' + targetUrl;
+                        window.open(targetUrl, '_blank');
+                    }
+                };
+
+                const iconCircle = document.createElement('div');
+                iconCircle.className = 'link-icon-circle';
+                if(link.icon) iconCircle.innerHTML = `<img src="${link.icon}">`;
+
+                iconCircle.onclick = (e) => {
+                    if (isAdmin) {
+                        e.stopPropagation();
+                        const n = prompt("لینک آیکون جدید:", link.icon || "");
+                        if (n !== null) { link.icon = n; renderUI(); }
+                    }
+                };
+
+                row.appendChild(card);
+                row.appendChild(iconCircle);
                 container.appendChild(row);
             });
-        }
-
-        function handleLinkClick(index, e) {
-            if (isAdmin) {
-                activeEditIndex = index;
-                const menu = document.getElementById('custom-menu');
-                menu.style.display = 'block';
-                menu.style.top = e.clientY + 'px';
-                menu.style.left = e.clientX + 'px';
-            } else {
-                window.open(cloudData.links[index].url, '_blank');
-            }
-        }
-
-        function handleIconClick(index, e) {
-            if (!isAdmin) return;
-            e.stopPropagation();
-            const n = prompt("لینک آیکون جدید:", cloudData.links[index].icon || "");
-            if (n !== null) { cloudData.links[index].icon = n; renderUI(); }
         }
 
         async function saveToCloud() {
@@ -154,7 +165,7 @@
                 });
                 alert("تغییرات با موفقیت در ابر ذخیره شد!");
                 location.reload();
-            } catch (e) { alert("خطا در ذخیره‌سازی"); }
+            } catch (e) { alert("خطا در ذخیره‌سازی ابری"); }
             document.getElementById('loading-overlay').style.display = 'none';
         }
 
@@ -164,10 +175,13 @@
                 document.body.classList.add('edit-mode');
                 document.getElementById('admin-bar').style.display = 'block';
                 document.getElementById('login-box').style.display = 'none';
-            } else { alert("رمز اشتباه"); document.getElementById('login-box').style.display = 'none'; }
+                renderUI();
+            } else { 
+                document.getElementById('login-box').style.display = 'none';
+                alert("رمز اشتباه است"); 
+            }
         }
 
-        // توابع کمکی ویرایش
         function addNewLink() {
             const title = prompt("عنوان:");
             const url = prompt("آدرس:", "https://");
@@ -176,15 +190,26 @@
                 renderUI();
             }
         }
+
         function deleteLink() { cloudData.links.splice(activeEditIndex, 1); renderUI(); closeMenu(); }
-        function editExistingLink(field) { const v = prompt("مقدار جدید:", cloudData.links[activeEditIndex][field]); if(v!==null) cloudData.links[activeEditIndex][field]=v; renderUI(); closeMenu(); }
-        function triggerColor(type) { activeColorType = type; document.getElementById(type === 'bg' ? 'color-input' : 'font-color-input').click(); }
+        function editExistingLink(field) { 
+            const v = prompt("مقدار جدید:", cloudData.links[activeEditIndex][field]); 
+            if(v!==null) { cloudData.links[activeEditIndex][field]=v; renderUI(); }
+            closeMenu(); 
+        }
+        function triggerColor(type) { closeMenu(); document.getElementById(type === 'bg' ? 'color-input' : 'font-color-input').click(); }
         function applyColor(type, val) { if(type==='bg') cloudData.links[activeEditIndex].color=val; else cloudData.links[activeEditIndex].fontColor=val; renderUI(); }
-        function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس:", cloudData.profile.img); if(n) { cloudData.profile.img=n; renderUI(); } }
+        function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس پروفایل:", cloudData.profile.img); if(n) { cloudData.profile.img=n; renderUI(); } }
         function editText(id) { if(!isAdmin) return; const v = prompt("متن جدید:", cloudData.profile.bio); if(v) { cloudData.profile.bio=v; renderUI(); } }
         function toggleBox(id) { const b = document.getElementById(id); b.style.display = b.style.display==='flex'?'none':'flex'; }
         function closeMenu() { document.getElementById('custom-menu').style.display = 'none'; }
-        window.addEventListener('keydown', e => { if(e.ctrlKey && e.altKey && e.shiftKey && e.code==='KeyL') document.getElementById('admin-trigger').style.display='block'; });
+        
+        window.addEventListener('keydown', e => { 
+            if(e.ctrlKey && e.altKey && e.shiftKey && e.code==='KeyL') {
+                const trg = document.getElementById('admin-trigger');
+                trg.style.display = (trg.style.display === 'block') ? 'none' : 'block';
+            }
+        });
 
         loadFromCloud();
     </script>
