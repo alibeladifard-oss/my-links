@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه شخصی - مدیریت پیشرفته</title>
+    <title>صفحه شخصی - ویرایش حرفه‌ای</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -28,32 +28,53 @@
             position: fixed; top: 0; left: 0; z-index: 10001; font-weight: bold;
         }
 
-        .profile-container { text-align: center; width: 100%; max-width: 400px; margin-top: 60px; }
+        .profile-container { 
+            text-align: center; width: 100%; max-width: 600px; 
+            margin-top: 60px; display: flex; flex-direction: column; align-items: center;
+        }
+
         .profile-img { 
             width: 100px; height: 100px; border-radius: 50%; 
             border: 3px solid var(--accent-color); margin-bottom: 15px; 
-            object-fit: cover; cursor: default;
+            object-fit: cover;
         }
         
         .edit-mode .profile-img { border: 3px dashed var(--accent-color); cursor: pointer; }
 
-        .links-wrapper { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        .links-wrapper { 
+            display: flex; flex-direction: column; gap: 15px; 
+            width: 100%; align-items: center; margin-top: 20px;
+        }
         
-        .link-card {
-            background-color: var(--card-bg); color: white; text-decoration: none;
-            padding: 15px; border-radius: 12px; display: flex; align-items: center;
-            justify-content: center; gap: 10px; position: relative; transition: 0.2s;
+        .link-row {
+            display: flex; align-items: center; gap: 12px;
+            width: 100%; justify-content: center; position: relative;
         }
 
-        .link-card img { width: 24px; height: 24px; border-radius: 4px; }
+        .link-card {
+            background-color: var(--card-bg); color: white; text-decoration: none;
+            padding: 12px 25px; border-radius: 12px; display: flex; align-items: center;
+            justify-content: center; min-width: 150px; width: fit-content;
+            transition: 0.2s; cursor: pointer; border: 1px solid transparent;
+        }
+
+        .link-icon-circle {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: var(--card-bg); overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--accent-color); flex-shrink: 0;
+        }
+
+        .link-icon-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .link-icon-circle i { font-size: 20px; color: var(--accent-color); }
 
         /* استایل درگ کردن */
-        .edit-mode .link-card { cursor: move; border: 1px solid #334155; }
-        .dragging { opacity: 0.5; transform: scale(0.95); }
+        .edit-mode .link-row { cursor: move; }
+        .dragging { opacity: 0.4; }
 
         #admin-trigger {
             display: none; position: fixed; bottom: 20px; left: 20px;
-            width: 15px; height: 15px; background: rgba(255,255,255,0.2);
+            width: 15px; height: 15px; background: rgba(255,255,255,0.1);
             border-radius: 50%; cursor: pointer; z-index: 9999;
         }
 
@@ -73,27 +94,32 @@
             padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
         }
 
-        .edit-mode .editable { border: 1px dashed var(--accent-color); padding: 2px; }
-        
         .delete-btn {
-            display: none; position: absolute; right: -10px; top: -10px;
+            display: none; position: absolute; left: -30px; 
             background: #ef4444; color: white; border-radius: 50%;
             width: 22px; height: 22px; border: none; cursor: pointer;
-            z-index: 100; align-items: center; justify-content: center; font-size: 14px;
+            align-items: center; justify-content: center; font-size: 14px;
         }
         .edit-mode .delete-btn { display: flex; }
 
         .add-btn, .save-exit-btn {
             display: none; margin-top: 15px; border: none; padding: 12px; 
-            border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; color: white;
+            border-radius: 10px; cursor: pointer; width: 200px; font-weight: bold; color: white;
         }
         .add-btn { background: #475569; }
         .save-exit-btn { background: var(--success-color); margin-bottom: 50px; }
-        
         .edit-mode .add-btn, .edit-mode .save-exit-btn { display: block; }
+
+        /* پالت رنگ کلیک راست */
+        #color-picker {
+            display: none; position: fixed; background: #1e293b;
+            border: 1px solid var(--accent-color); padding: 5px;
+            border-radius: 8px; z-index: 10002; grid-template-columns: repeat(4, 1fr); gap: 5px;
+        }
+        .color-dot { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 1px solid #ffffff44; }
     </style>
 </head>
-<body id="main-body">
+<body id="main-body" onclick="closeColorPicker()">
 
     <div id="admin-bar">حالت ویرایش فعال است</div>
 
@@ -110,33 +136,51 @@
 
     <div id="admin-trigger" onclick="toggleBox('login-box')"></div>
     
-    <div id="login-box">
-        <input type="password" id="u-field" placeholder="1">
-        <input type="password" id="p-field" placeholder="2">
+    <div id="login-box" onclick="event.stopPropagation()">
+        <input type="password" id="u-field" placeholder="رمز ۱">
+        <input type="password" id="p-field" placeholder="رمز ۲">
         <button class="action-btn" onclick="processLogin()">ورود</button>
     </div>
 
+    <div id="color-picker"></div>
+
     <script>
         let isAdmin = false;
+        let activeEditIndex = null;
         let storedU = localStorage.getItem('adminU') || "100";
         let storedP = localStorage.getItem('adminP') || "200";
 
         let profileData = JSON.parse(localStorage.getItem('profileData')) || {
-            name: "نام شما",
-            bio: "توضیحات کوتاه",
-            img: "https://via.placeholder.com/100"
+            name: "نام شما", bio: "توضیحات کوتاه", img: "https://via.placeholder.com/100"
         };
 
         let links = JSON.parse(localStorage.getItem('myLinks')) || [
             { title: 'اینستاگرام', url: 'https://instagram.com', icon: '', color: '#1e293b' }
         ];
 
-        // لود اولیه داده‌ها
+        const colors = ['#1e293b', '#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];
+
         function init() {
             document.getElementById('user-name').innerText = profileData.name;
             document.getElementById('user-bio').innerText = profileData.bio;
             document.getElementById('p-img').src = profileData.img;
+            setupColorPicker();
             renderLinks();
+        }
+
+        function setupColorPicker() {
+            const picker = document.getElementById('color-picker');
+            colors.forEach(c => {
+                const dot = document.createElement('div');
+                dot.className = 'color-dot';
+                dot.style.background = c;
+                dot.onclick = () => {
+                    links[activeEditIndex].color = c;
+                    saveAndRefresh();
+                    closeColorPicker();
+                };
+                picker.appendChild(dot);
+            });
         }
 
         window.addEventListener('keydown', (e) => {
@@ -156,7 +200,7 @@
                 document.getElementById('p-field').value === storedP) {
                 isAdmin = true;
                 document.body.classList.add('edit-mode');
-                toggleBox('login-box');
+                document.getElementById('login-box').style.display = 'none';
                 renderLinks();
             }
         }
@@ -172,77 +216,82 @@
             saveAndRefresh();
         }
 
-        function editProfilePic() {
-            if(!isAdmin) return;
-            const newImg = prompt("لینک عکس پروفایل جدید را وارد کنید:", document.getElementById('p-img').src);
-            if(newImg) document.getElementById('p-img').src = newImg;
-        }
-
-        function editText(id) {
-            if(!isAdmin) return;
-            const val = prompt("تغییر متن:", document.getElementById(id).innerText);
-            if(val) document.getElementById(id).innerText = val;
-        }
-
         function renderLinks() {
             const container = document.getElementById('links-container');
             container.innerHTML = '';
             links.forEach((link, index) => {
-                const div = document.createElement('div');
-                div.className = 'link-card';
-                div.draggable = isAdmin;
-                div.style.backgroundColor = link.color;
-                
-                let iconHtml = link.icon ? `<img src="${link.icon}">` : '';
-                div.innerHTML = `
-                    ${iconHtml}
-                    <span>${link.title}</span>
-                    <button class="delete-btn" onclick="removeLink(event, ${index})">×</button>
-                `;
+                const row = document.createElement('div');
+                row.className = 'link-row';
+                row.draggable = isAdmin;
 
-                div.onclick = () => { 
+                const iconCircle = document.createElement('div');
+                iconCircle.className = 'link-icon-circle';
+                iconCircle.innerHTML = link.icon ? `<img src="${link.icon}">` : `<i class="fas fa-link"></i>`;
+
+                const card = document.createElement('div');
+                card.className = 'link-card';
+                card.style.backgroundColor = link.color;
+                card.innerHTML = `<span>${link.title}</span>`;
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn';
+                delBtn.innerHTML = '×';
+                delBtn.onclick = (e) => removeLink(e, index);
+
+                card.onclick = () => { 
                     if(isAdmin) editExistingLink(index);
                     else window.location.href = link.url;
                 };
 
-                // رویدادهای درگ و دراپ
+                // کلیک راست برای تغییر رنگ
+                card.oncontextmenu = (e) => {
+                    if(!isAdmin) return;
+                    e.preventDefault();
+                    activeEditIndex = index;
+                    const picker = document.getElementById('color-picker');
+                    picker.style.display = 'grid';
+                    picker.style.top = e.clientY + 'px';
+                    picker.style.left = e.clientX + 'px';
+                };
+
                 if(isAdmin) {
-                    div.addEventListener('dragstart', () => div.classList.add('dragging'));
-                    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+                    row.addEventListener('dragstart', () => row.classList.add('dragging'));
+                    row.addEventListener('dragend', () => row.classList.remove('dragging'));
                 }
 
-                container.appendChild(div);
+                row.appendChild(delBtn);
+                row.appendChild(card);
+                row.appendChild(iconCircle);
+                container.appendChild(row);
             });
         }
 
-        // منطق جابه‌جایی (Sortable)
+        // منطق جابه‌جایی
         const container = document.getElementById('links-container');
         container.addEventListener('dragover', e => {
             if(!isAdmin) return;
             e.preventDefault();
             const draggingItem = document.querySelector('.dragging');
-            const siblings = [...container.querySelectorAll('.link-card:not(.dragging)')];
-            let nextSibling = siblings.find(sibling => {
-                return e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
-            });
+            const siblings = [...container.querySelectorAll('.link-row:not(.dragging)')];
+            let nextSibling = siblings.find(sibling => e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2);
             container.insertBefore(draggingItem, nextSibling);
         });
 
         container.addEventListener('drop', () => {
             if(!isAdmin) return;
-            // به‌روزرسانی آرایه بر اساس ترتیب جدید در DOM
             const newOrder = [];
-            document.querySelectorAll('.link-card').forEach(card => {
-                const title = card.querySelector('span').innerText;
+            document.querySelectorAll('.link-row').forEach(row => {
+                const title = row.querySelector('.link-card span').innerText;
                 const found = links.find(l => l.title === title);
                 if(found) newOrder.push(found);
             });
             links = newOrder;
+            saveAndRefresh();
         });
 
         function addNewLink() {
-            const title = prompt("عنوان لینک:");
-            const url = prompt("آدرس (URL):", "https://");
+            const title = prompt("عنوان:");
+            const url = prompt("آدرس:", "https://");
             const icon = prompt("لینک آیکون (اختیاری):");
             if(title && url) {
                 links.push({title, url, icon, color:'#1e293b'});
@@ -251,27 +300,24 @@
         }
 
         function editExistingLink(index) {
-            const t = prompt("۱. عنوان جدید:", links[index].title);
-            const u = prompt("۲. آدرس جدید:", links[index].url);
-            const i = prompt("۳. آیکون جدید (خالی برای حذف):", links[index].icon || "");
-            
+            const t = prompt("عنوان جدید:", links[index].title);
+            const u = prompt("آدرس جدید:", links[index].url);
+            const i = prompt("آیکون جدید:", links[index].icon || "");
             if(t && u) {
-                links[index].title = t;
-                links[index].url = u;
-                links[index].icon = i;
+                links[index].title = t; links[index].url = u; links[index].icon = i;
                 saveAndRefresh();
             }
         }
 
         function removeLink(e, index) {
             e.stopPropagation();
-            if(confirm("حذف این لینک؟")) { links.splice(index, 1); saveAndRefresh(); }
+            if(confirm("حذف؟")) { links.splice(index, 1); saveAndRefresh(); }
         }
 
-        function saveAndRefresh() {
-            localStorage.setItem('myLinks', JSON.stringify(links));
-            renderLinks();
-        }
+        function closeColorPicker() { document.getElementById('color-picker').style.display = 'none'; }
+        function saveAndRefresh() { localStorage.setItem('myLinks', JSON.stringify(links)); renderLinks(); }
+        function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس:", document.getElementById('p-img').src); if(n) document.getElementById('p-img').src = n; }
+        function editText(id) { if(!isAdmin) return; const v = prompt("متن:", document.getElementById(id).innerText); if(v) document.getElementById(id).innerText = v; }
 
         init();
     </script>
