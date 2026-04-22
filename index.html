@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدیریت لینک‌ها - حرفه‌ای</title>
+    <title>صفحه شخصی - مدیریت لینک‌ها</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -47,48 +47,33 @@
         }
         
         .link-row {
-            display: flex; align-items: center; gap: 15px;
+            display: flex; align-items: center; gap: 12px;
             width: 100%; justify-content: center; position: relative;
         }
 
         .link-card {
             color: white; text-decoration: none;
             padding: 12px 25px; border-radius: 12px; display: flex; align-items: center;
-            justify-content: center; min-width: 150px; width: fit-content;
+            justify-content: center; min-width: 180px; width: fit-content;
             transition: 0.2s; cursor: pointer; border: none;
+            font-weight: bold; /* بولد کردن عناوین طبق درخواست */
         }
 
         .link-icon-circle {
             width: 45px; height: 45px; border-radius: 50%;
-            background: var(--card-bg); overflow: hidden;
+            background: rgba(255, 255, 255, 0.05); overflow: hidden;
             display: flex; align-items: center; justify-content: center;
-            border: none !important; flex-shrink: 0;
+            border: none; flex-shrink: 0;
         }
 
-        .link-icon-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .link-icon-circle img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         .edit-mode .link-row { cursor: move; }
         .dragging { opacity: 0.3; }
 
-        #admin-trigger {
-            display: none; position: fixed; bottom: 20px; left: 20px;
-            width: 15px; height: 15px; background: rgba(255,255,255,0.1);
-            border-radius: 50%; cursor: pointer; z-index: 9999;
-        }
-
-        #login-box {
-            display: none; position: fixed; bottom: 45px; left: 20px;
-            background: #1e293b; padding: 12px; border-radius: 8px;
-            border: 1px solid #334155; flex-direction: column; gap: 8px; z-index: 10000;
-        }
-
-        .action-btn {
-            background: var(--accent-color); color: #000; border: none;
-            padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
-        }
-
+        /* دکمه‌های کنترلی پایین */
         .edit-controls {
-            display: none; flex-direction: column; gap: 10px; width: 220px; margin-top: 20px; margin-bottom: 50px;
+            display: none; flex-direction: column; gap: 10px; width: 220px; margin-top: 30px; margin-bottom: 50px;
         }
         .edit-mode .edit-controls { display: flex; }
 
@@ -99,6 +84,7 @@
         .save-btn { background: var(--success-color); }
         .cancel-btn { background: var(--danger-color); }
 
+        /* منوی کلیک راست */
         #custom-menu {
             display: none; position: fixed; background: #1e293b;
             border: 1px solid #475569; border-radius: 8px; z-index: 10002;
@@ -107,11 +93,24 @@
         .menu-item {
             padding: 12px 15px; color: white; cursor: pointer; font-size: 13px;
             display: flex; align-items: center; gap: 10px; transition: 0.2s; border-bottom: 1px solid #334155;
+            text-align: right;
         }
         .menu-item:last-child { border-bottom: none; }
         .menu-item:hover { background: #334155; color: var(--accent-color); }
         .menu-item.danger:hover { color: #ff4d4d; }
-        
+
+        /* ورود مخفی */
+        #admin-trigger {
+            display: none; position: fixed; bottom: 20px; left: 20px;
+            width: 15px; height: 15px; background: rgba(255,255,255,0.1);
+            border-radius: 50%; cursor: pointer; z-index: 9999;
+        }
+        #login-box {
+            display: none; position: fixed; bottom: 45px; left: 20px;
+            background: #1e293b; padding: 12px; border-radius: 8px;
+            border: 1px solid #334155; flex-direction: column; gap: 8px; z-index: 10000;
+        }
+
         #color-input, #font-color-input { display: none; }
     </style>
 </head>
@@ -134,20 +133,19 @@
     </div>
 
     <div id="admin-trigger" onclick="toggleBox('login-box')"></div>
-    
     <div id="login-box" onclick="event.stopPropagation()">
         <input type="password" id="u-field" placeholder="رمز ۱" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:4px;">
         <input type="password" id="p-field" placeholder="رمز ۲" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:4px;">
-        <button class="action-btn" onclick="processLogin()">ورود</button>
+        <button style="background:var(--accent-color); border:none; padding:8px; border-radius:4px; cursor:pointer;" onclick="processLogin()">ورود</button>
     </div>
 
     <div id="custom-menu">
         <div class="menu-item" onclick="editExistingLink('title')"><i class="fas fa-font"></i> تغییر عنوان</div>
         <div class="menu-item" onclick="editExistingLink('url')"><i class="fas fa-link"></i> تغییر لینک</div>
-        <div class="menu-item" onclick="editExistingLink('icon')"><i class="fas fa-image"></i> تغییر آیکون</div>
+        <div class="menu-item" onclick="editExistingLink('icon')"><i class="fas fa-image"></i> تغییر تصویر آیکون</div>
         <div class="menu-item" onclick="triggerColor('bg')"><i class="fas fa-fill-drip"></i> تغییر رنگ باکس</div>
-        <div class="menu-item" onclick="triggerColor('font')"><i class="fas fa-tint"></i> تغییر رنگ فونت</div>
-        <div class="menu-item danger" onclick="deleteLink()"><i class="fas fa-trash"></i> حذف کامل این باکس</div>
+        <div class="menu-item" onclick="triggerColor('font')"><i class="fas fa-tint"></i> تغییر رنگ متن</div>
+        <div class="menu-item danger" onclick="deleteLink()"><i class="fas fa-trash"></i> حذف باکس</div>
     </div>
 
     <input type="color" id="color-input" onchange="applyColor('bg', this.value)">
@@ -157,7 +155,6 @@
         let isAdmin = false;
         let activeEditIndex = null;
         
-        // داده‌های اصلی که در حافظه دائمی هستند
         let profileData = JSON.parse(localStorage.getItem('profileData')) || {
             name: "نام شما", bio: "توضیحات کوتاه", img: "https://via.placeholder.com/100"
         };
@@ -165,9 +162,7 @@
             { title: 'اینستاگرام', url: 'https://instagram.com', icon: '', color: '#1e293b', fontColor: '#ffffff' }
         ];
 
-        // کپی موقت برای زمان ویرایش
         let tempLinks = [];
-        let tempProfile = {};
 
         function init() {
             document.getElementById('user-name').innerText = profileData.name;
@@ -188,13 +183,12 @@
         }
 
         function processLogin() {
-            if (document.getElementById('u-field').value === "100" && 
-                document.getElementById('p-field').value === "200") {
+            const storedU = localStorage.getItem('adminU') || "100";
+            const storedP = localStorage.getItem('adminP') || "200";
+            if (document.getElementById('u-field').value === storedU && 
+                document.getElementById('p-field').value === storedP) {
                 isAdmin = true;
-                // کپی گرفتن از داده‌ها برای ویرایش موقت
                 tempLinks = JSON.parse(JSON.stringify(links));
-                tempProfile = JSON.parse(JSON.stringify(profileData));
-                
                 document.body.classList.add('edit-mode');
                 document.getElementById('admin-bar').style.display = 'block';
                 document.getElementById('login-box').style.display = 'none';
@@ -203,15 +197,14 @@
         }
 
         function cancelChanges() {
-            if(!confirm("آیا از لغو تمامی تغییرات اطمینان دارید؟")) return;
+            if(!confirm("لغو تغییرات؟")) return;
             isAdmin = false;
             document.body.classList.remove('edit-mode');
             document.getElementById('admin-bar').style.display = 'none';
-            init(); // بازگشت به داده‌های اصلی
+            init();
         }
 
         function finalizeChanges() {
-            // ذخیره دائمی کپی موقت در حافظه
             links = JSON.parse(JSON.stringify(tempLinks));
             profileData = {
                 name: document.getElementById('user-name').innerText,
@@ -220,12 +213,10 @@
             };
             localStorage.setItem('myLinks', JSON.stringify(links));
             localStorage.setItem('profileData', JSON.stringify(profileData));
-            
             isAdmin = false;
             document.body.classList.remove('edit-mode');
             document.getElementById('admin-bar').style.display = 'none';
             renderLinks(links);
-            alert("تغییرات با موفقیت ذخیره شد.");
         }
 
         function renderLinks(dataArray) {
@@ -244,14 +235,17 @@
                 
                 const iconCircle = document.createElement('div');
                 iconCircle.className = 'link-icon-circle';
-                iconCircle.innerHTML = link.icon ? `<img src="${link.icon}">` : `<i class="fas fa-link" style="color:var(--accent-color)"></i>`;
+                // نمایش تصویر فقط در صورت وجود لینک معتبر
+                if(link.icon && link.icon.trim() !== "") {
+                    iconCircle.innerHTML = `<img src="${link.icon}" onerror="this.style.display='none'">`;
+                } else {
+                    iconCircle.innerHTML = ''; // فضای خالی طبق رفرنس دوم
+                }
 
                 card.onclick = () => { 
                     if(!isAdmin) {
                         let targetUrl = link.url;
-                        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
-                            targetUrl = 'https://' + targetUrl;
-                        }
+                        if (!/^https?:\/\//i.test(targetUrl)) targetUrl = 'https://' + targetUrl;
                         window.open(targetUrl, '_blank');
                     }
                 };
@@ -268,17 +262,16 @@
                 };
 
                 if(isAdmin) {
-                    row.addEventListener('dragstart', () => row.classList.add('dragging'));
-                    row.addEventListener('dragend', () => row.classList.remove('dragging'));
+                    row.ondragstart = () => row.classList.add('dragging');
+                    row.ondragend = () => row.classList.remove('dragging');
                 }
 
                 row.appendChild(card);
-                row.appendChild(iconCircle);
+                row.appendChild(iconCircle); // آیکون در سمت راست
                 container.appendChild(row);
             });
         }
 
-        // توابع ویرایش (تغییرات فقط روی tempLinks اعمال می‌شود)
         function triggerColor(type) {
             closeMenu();
             if(type === 'bg') document.getElementById('color-input').click();
@@ -317,18 +310,17 @@
 
         function closeMenu() { document.getElementById('custom-menu').style.display = 'none'; }
 
-        // جابه‌جایی Drag & Drop روی tempLinks
         const container = document.getElementById('links-container');
-        container.addEventListener('dragover', e => {
+        container.ondragover = e => {
             if(!isAdmin) return;
             e.preventDefault();
             const draggingItem = document.querySelector('.dragging');
             const siblings = [...container.querySelectorAll('.link-row:not(.dragging)')];
             let nextSibling = siblings.find(sibling => e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2);
             container.insertBefore(draggingItem, nextSibling);
-        });
+        };
 
-        container.addEventListener('drop', () => {
+        container.ondrop = () => {
             if(!isAdmin) return;
             const newOrder = [];
             document.querySelectorAll('.link-row').forEach(row => {
@@ -337,7 +329,7 @@
                 if(found) newOrder.push(found);
             });
             tempLinks = newOrder;
-        });
+        };
 
         function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس جدید:", document.getElementById('p-img').src); if(n) document.getElementById('p-img').src = n; }
         function editText(id) { if(!isAdmin) return; const v = prompt("متن جدید:", document.getElementById(id).innerText); if(v) document.getElementById(id).innerText = v; }
