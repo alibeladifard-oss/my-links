@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه لینک‌ها</title>
+    <title>صفحه شخصی</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -14,14 +14,21 @@
         }
 
         body {
-            font-family: Tahoma, Arial, sans-serif;
+            font-family: Tahoma, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex; flex-direction: column; align-items: center;
             padding: 20px; margin: 0; min-height: 100vh;
         }
 
-        .profile-container { text-align: center; width: 100%; max-width: 400px; }
+        /* نوار وضعیت مدیریت که در ابتدا مخفی است */
+        #admin-bar {
+            display: none; width: 100%; background: var(--accent-color);
+            color: #000; text-align: center; padding: 5px 0;
+            position: fixed; top: 0; left: 0; z-index: 10001; font-weight: bold;
+        }
+
+        .profile-container { text-align: center; width: 100%; max-width: 400px; margin-top: 40px; }
         .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent-color); margin-bottom: 15px; object-fit: cover; }
         .links-wrapper { display: flex; flex-direction: column; gap: 12px; width: 100%; }
         
@@ -31,48 +38,52 @@
             justify-content: center; gap: 10px; transition: 0.3s; position: relative;
         }
 
-        /* دایره کوچک پایین سمت چپ */
+        /* دایره مدیریت */
         #admin-trigger {
-            display: none; position: fixed; bottom: 10px; left: 10px;
-            width: 15px; height: 15px; background: rgba(255,255,255,0.1);
+            display: none; position: fixed; bottom: 15px; left: 15px;
+            width: 15px; height: 15px; background: rgba(255,255,255,0.2);
             border-radius: 50%; cursor: pointer; z-index: 9999;
         }
 
         /* باکس ورود */
         #login-box {
-            display: none; position: fixed; bottom: 35px; left: 10px;
+            display: none; position: fixed; bottom: 40px; left: 15px;
             background: #1e293b; padding: 12px; border-radius: 8px;
             border: 1px solid #334155; flex-direction: column; gap: 8px; z-index: 10000;
         }
 
         #login-box input {
             background: #0f172a; border: 1px solid #334155; color: white;
-            padding: 8px; border-radius: 4px; outline: none; width: 140px; font-size: 14px;
+            padding: 8px; border-radius: 4px; outline: none; width: 150px;
         }
 
         .login-submit-btn {
-            background: var(--accent-color); color: #0f172a; border: none;
+            background: var(--accent-color); color: #000; border: none;
             padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
-            display: flex; align-items: center; justify-content: center;
         }
 
-        .edit-mode .delete-btn {
-            position: absolute; right: -8px; top: -8px; background: #ef4444;
-            color: white; border-radius: 50%; width: 22px; height: 22px;
-            border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        /* استایل‌های حالت ویرایش */
+        .edit-mode .editable { border: 1px dashed var(--accent-color); padding: 2px; cursor: pointer; }
+        
+        .delete-btn {
+            display: none; position: absolute; right: -8px; top: -8px;
+            background: #ef4444; color: white; border-radius: 50%;
+            width: 24px; height: 24px; border: none; cursor: pointer;
+            align-items: center; justify-content: center; z-index: 20;
         }
+        .edit-mode .delete-btn { display: flex; }
 
         .add-btn {
             display: none; margin-top: 25px; background: var(--accent-color);
-            border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%;
-            font-weight: bold; color: #0f172a;
+            border: none; padding: 12px; border-radius: 10px; cursor: pointer;
+            width: 100%; font-weight: bold; color: #0f172a;
         }
-
         .edit-mode .add-btn { display: block; }
-        .edit-mode .editable:hover { outline: 1px dashed var(--accent-color); cursor: pointer; }
     </style>
 </head>
 <body>
+
+    <div id="admin-bar">حالت ویرایش فعال است</div>
 
     <div class="profile-container">
         <img src="https://via.placeholder.com/100" class="profile-img" id="profile-pic">
@@ -86,11 +97,9 @@
     <div id="admin-trigger" onclick="toggleLoginBox()"></div>
     
     <div id="login-box">
-        <input type="password" id="u-field" autocomplete="new-password" placeholder="1">
-        <input type="password" id="p-field" autocomplete="new-password" placeholder="2">
-        <button class="login-submit-btn" onclick="processLogin()">
-            <i class="fas fa-check"></i> تایید
-        </button>
+        <input type="password" id="u-field" placeholder="1">
+        <input type="password" id="p-field" placeholder="2">
+        <button class="login-submit-btn" onclick="processLogin()">تایید (Login)</button>
     </div>
 
     <script>
@@ -102,60 +111,46 @@
             { title: 'اینستاگرام', url: '#', icon: 'fa-instagram', color: '#1e293b' }
         ];
 
-        // شورتکات فقط دایره را مخفی/ظاهر می‌کند
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyL') {
-                const now = Date.now();
-                if (now < lockUntil) return;
-                
-                const trigger = document.getElementById('admin-trigger');
-                trigger.style.display = (trigger.style.display === 'block') ? 'none' : 'block';
-                // اگر دایره مخفی شد، باکس ورود هم مخفی شود
-                if(trigger.style.display === 'none') {
-                    document.getElementById('login-box').style.display = 'none';
-                }
+                if (Date.now() < lockUntil) return;
+                const trg = document.getElementById('admin-trigger');
+                trg.style.display = (trg.style.display === 'block') ? 'none' : 'block';
             }
         });
 
         function toggleLoginBox() {
             const box = document.getElementById('login-box');
             box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
-            if(box.style.display === 'flex') {
-                setTimeout(() => document.getElementById('u-field').focus(), 50);
-            }
         }
 
         function processLogin() {
-            const u = document.getElementById('u-field').value;
-            const p = document.getElementById('p-field').value;
-            const box = document.getElementById('login-box');
-            const trigger = document.getElementById('admin-trigger');
+            const u = document.getElementById('u-field').value.trim();
+            const p = document.getElementById('p-field').value.trim();
 
             if (u === "beladifard" && p === "HldvUgd.1400") {
-                isAdmin = true;
-                failCount = 0;
-                localStorage.setItem('failCount', 0);
-                document.body.classList.add('edit-mode');
-                box.style.display = 'none';
-                trigger.style.display = 'none';
-                renderLinks();
+                activateAdmin();
             } else {
                 failCount++;
                 localStorage.setItem('failCount', failCount);
+                document.getElementById('login-box').style.display = 'none';
+                document.getElementById('admin-trigger').style.display = 'none';
                 
-                box.style.display = 'none';
-                trigger.style.display = 'none';
-                document.getElementById('u-field').value = '';
-                document.getElementById('p-field').value = '';
-
                 if (failCount >= 5) {
-                    const blockTime = Date.now() + (5 * 60 * 1000); 
-                    localStorage.setItem('lockUntil', blockTime);
-                    lockUntil = blockTime;
-                    failCount = 0; 
+                    localStorage.setItem('lockUntil', Date.now() + 300000);
+                    failCount = 0;
                     localStorage.setItem('failCount', 0);
                 }
             }
+        }
+
+        function activateAdmin() {
+            isAdmin = true;
+            document.body.classList.add('edit-mode');
+            document.getElementById('admin-bar').style.display = 'block';
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('admin-trigger').style.display = 'none';
+            renderLinks();
         }
 
         function renderLinks() {
@@ -168,14 +163,11 @@
                 a.innerHTML = `
                     <i class="fab ${link.icon}"></i>
                     <span>${link.title}</span>
-                    ${isAdmin ? `<button class="delete-btn" onclick="removeLink(event, ${index})"><i class="fas fa-times"></i></button>` : ''}
+                    <button class="delete-btn" onclick="removeLink(event, ${index})">×</button>
                 `;
                 a.onclick = () => { 
-                    if(!isAdmin) {
-                        if(link.url !== "#") window.location.href = link.url;
-                    } else {
-                        editExistingLink(index);
-                    }
+                    if(!isAdmin) { if(link.url !== "#") window.location.href = link.url; }
+                    else { editExistingLink(index); }
                 };
                 container.appendChild(a);
             });
@@ -184,39 +176,30 @@
         function editText(id) {
             if(!isAdmin) return;
             const el = document.getElementById(id);
-            const val = prompt("تغییر متن:", el.innerText);
-            if(val !== null) el.innerText = val;
+            const val = prompt("متن جدید:", el.innerText);
+            if(val) el.innerText = val;
         }
 
         function addNewLink() {
             const t = prompt("عنوان:");
-            const u = prompt("آدرس کامل:", "https://");
-            const i = prompt("آیکون:", "fa-link");
-            const c = prompt("رنگ باکس:", "#1e293b");
-            if(t && u) { 
-                links.push({title:t, url:u, icon:i, color:c}); 
-                saveAndRefresh(); 
+            const u = prompt("آدرس (https://...):", "https://");
+            if(t && u) {
+                links.push({title:t, url:u, icon:'fa-link', color:'#1e293b'});
+                saveAndRefresh();
             }
         }
 
         function removeLink(e, index) {
             e.stopPropagation();
-            if(confirm("آیا حذف شود؟")) { 
-                links.splice(index, 1); 
-                saveAndRefresh(); 
-            }
+            if(confirm("حذف؟")) { links.splice(index, 1); saveAndRefresh(); }
         }
 
         function editExistingLink(index) {
-            const l = links[index];
-            const t = prompt("عنوان جدید:", l.title);
-            if(t !== null) {
-                links[index] = { 
-                    title:t, 
-                    url:prompt("آدرس جدید:", l.url), 
-                    icon:prompt("آیکون جدید:", l.icon), 
-                    color:prompt("رنگ جدید:", l.color) 
-                };
+            const t = prompt("عنوان جدید:", links[index].title);
+            if(t) {
+                links[index].title = t;
+                links[index].url = prompt("آدرس جدید:", links[index].url);
+                links[index].color = prompt("رنگ جدید (کد هگز):", links[index].color);
                 saveAndRefresh();
             }
         }
