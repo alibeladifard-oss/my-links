@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدیریت لینک‌ها - نسخه نهایی</title>
+    <title>مدیریت لینک‌ها - حرفه‌ای</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -12,6 +12,7 @@
             --text-color: #ffffff;
             --accent-color: #38bdf8;
             --success-color: #22c55e;
+            --danger-color: #ef4444;
         }
 
         body {
@@ -33,7 +34,6 @@
             margin-top: 60px; display: flex; flex-direction: column; align-items: center;
         }
 
-        /* حذف استروک آبی از پروفایل */
         .profile-img { 
             width: 100px; height: 100px; border-radius: 50%; 
             margin-bottom: 15px; object-fit: cover; border: none !important;
@@ -58,7 +58,6 @@
             transition: 0.2s; cursor: pointer; border: none;
         }
 
-        /* آیکون دایره‌ای بدون استروک */
         .link-icon-circle {
             width: 45px; height: 45px; border-radius: 50%;
             background: var(--card-bg); overflow: hidden;
@@ -88,23 +87,18 @@
             padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
         }
 
-        .delete-btn {
-            display: none; position: absolute; left: -40px; 
-            background: #ef4444; color: white; border-radius: 50%;
-            width: 22px; height: 22px; border: none; cursor: pointer;
-            align-items: center; justify-content: center; font-size: 14px;
+        .edit-controls {
+            display: none; flex-direction: column; gap: 10px; width: 220px; margin-top: 20px; margin-bottom: 50px;
         }
-        .edit-mode .delete-btn { display: flex; }
+        .edit-mode .edit-controls { display: flex; }
 
-        .add-btn, .save-exit-btn {
-            display: none; margin-top: 15px; border: none; padding: 12px; 
-            border-radius: 10px; cursor: pointer; width: 200px; font-weight: bold; color: white;
+        .control-btn {
+            border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s;
         }
         .add-btn { background: #475569; }
-        .save-exit-btn { background: var(--success-color); margin-bottom: 50px; }
-        .edit-mode .add-btn, .edit-mode .save-exit-btn { display: block; }
+        .save-btn { background: var(--success-color); }
+        .cancel-btn { background: var(--danger-color); }
 
-        /* منوی کلیک راست حرفه‌ای */
         #custom-menu {
             display: none; position: fixed; background: #1e293b;
             border: 1px solid #475569; border-radius: 8px; z-index: 10002;
@@ -116,13 +110,14 @@
         }
         .menu-item:last-child { border-bottom: none; }
         .menu-item:hover { background: #334155; color: var(--accent-color); }
+        .menu-item.danger:hover { color: #ff4d4d; }
         
         #color-input, #font-color-input { display: none; }
     </style>
 </head>
 <body id="main-body" onclick="closeMenu()">
 
-    <div id="admin-bar">حالت ویرایش فعال است</div>
+    <div id="admin-bar">حالت ویرایش فعال است (تغییرات تا دکمه ذخیره را نزنید ثبت نمی‌شوند)</div>
 
     <div class="profile-container">
         <img id="p-img" src="https://via.placeholder.com/100" class="profile-img" onclick="editProfilePic()">
@@ -131,8 +126,11 @@
 
         <div id="links-container" class="links-wrapper"></div>
         
-        <button class="add-btn" onclick="addNewLink()">+ افزودن لینک جدید</button>
-        <button class="save-exit-btn" onclick="exitEditMode()">ذخیره نهایی و خروج</button>
+        <div class="edit-controls">
+            <button class="control-btn add-btn" onclick="addNewLink()">+ افزودن لینک جدید</button>
+            <button class="control-btn save-btn" onclick="finalizeChanges()">ذخیره نهایی و خروج</button>
+            <button class="control-btn cancel-btn" onclick="cancelChanges()">لغو تغییرات</button>
+        </div>
     </div>
 
     <div id="admin-trigger" onclick="toggleBox('login-box')"></div>
@@ -149,6 +147,7 @@
         <div class="menu-item" onclick="editExistingLink('icon')"><i class="fas fa-image"></i> تغییر آیکون</div>
         <div class="menu-item" onclick="triggerColor('bg')"><i class="fas fa-fill-drip"></i> تغییر رنگ باکس</div>
         <div class="menu-item" onclick="triggerColor('font')"><i class="fas fa-tint"></i> تغییر رنگ فونت</div>
+        <div class="menu-item danger" onclick="deleteLink()"><i class="fas fa-trash"></i> حذف کامل این باکس</div>
     </div>
 
     <input type="color" id="color-input" onchange="applyColor('bg', this.value)">
@@ -157,29 +156,29 @@
     <script>
         let isAdmin = false;
         let activeEditIndex = null;
-        let storedU = "100"; // می‌توانید از localStorage بگیرید
-        let storedP = "200";
-
+        
+        // داده‌های اصلی که در حافظه دائمی هستند
         let profileData = JSON.parse(localStorage.getItem('profileData')) || {
             name: "نام شما", bio: "توضیحات کوتاه", img: "https://via.placeholder.com/100"
         };
-
         let links = JSON.parse(localStorage.getItem('myLinks')) || [
             { title: 'اینستاگرام', url: 'https://instagram.com', icon: '', color: '#1e293b', fontColor: '#ffffff' }
         ];
+
+        // کپی موقت برای زمان ویرایش
+        let tempLinks = [];
+        let tempProfile = {};
 
         function init() {
             document.getElementById('user-name').innerText = profileData.name;
             document.getElementById('user-bio').innerText = profileData.bio;
             document.getElementById('p-img').src = profileData.img;
-            renderLinks();
+            renderLinks(links);
         }
 
-        // شورت‌کات ورود: Ctrl + Alt + Shift + L
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyL') {
-                const trg = document.getElementById('admin-trigger');
-                trg.style.display = 'block';
+                document.getElementById('admin-trigger').style.display = 'block';
             }
         });
 
@@ -189,56 +188,74 @@
         }
 
         function processLogin() {
-            if (document.getElementById('u-field').value === storedU && 
-                document.getElementById('p-field').value === storedP) {
+            if (document.getElementById('u-field').value === "100" && 
+                document.getElementById('p-field').value === "200") {
                 isAdmin = true;
+                // کپی گرفتن از داده‌ها برای ویرایش موقت
+                tempLinks = JSON.parse(JSON.stringify(links));
+                tempProfile = JSON.parse(JSON.stringify(profileData));
+                
                 document.body.classList.add('edit-mode');
                 document.getElementById('admin-bar').style.display = 'block';
                 document.getElementById('login-box').style.display = 'none';
-                renderLinks();
+                renderLinks(tempLinks);
             }
         }
 
-        function exitEditMode() {
+        function cancelChanges() {
+            if(!confirm("آیا از لغو تمامی تغییرات اطمینان دارید؟")) return;
             isAdmin = false;
             document.body.classList.remove('edit-mode');
             document.getElementById('admin-bar').style.display = 'none';
-            localStorage.setItem('profileData', JSON.stringify({
+            init(); // بازگشت به داده‌های اصلی
+        }
+
+        function finalizeChanges() {
+            // ذخیره دائمی کپی موقت در حافظه
+            links = JSON.parse(JSON.stringify(tempLinks));
+            profileData = {
                 name: document.getElementById('user-name').innerText,
                 bio: document.getElementById('user-bio').innerText,
                 img: document.getElementById('p-img').src
-            }));
-            saveAndRefresh();
+            };
+            localStorage.setItem('myLinks', JSON.stringify(links));
+            localStorage.setItem('profileData', JSON.stringify(profileData));
+            
+            isAdmin = false;
+            document.body.classList.remove('edit-mode');
+            document.getElementById('admin-bar').style.display = 'none';
+            renderLinks(links);
+            alert("تغییرات با موفقیت ذخیره شد.");
         }
 
-        function renderLinks() {
+        function renderLinks(dataArray) {
             const container = document.getElementById('links-container');
             container.innerHTML = '';
-            links.forEach((link, index) => {
+            dataArray.forEach((link, index) => {
                 const row = document.createElement('div');
                 row.className = 'link-row';
                 row.draggable = isAdmin;
 
-                // باکس لینک
                 const card = document.createElement('div');
                 card.className = 'link-card';
                 card.style.backgroundColor = link.color || '#1e293b';
                 card.style.color = link.fontColor || '#ffffff';
                 card.innerHTML = `<span>${link.title}</span>`;
                 
-                // آیکون دایره‌ای در سمت راست
                 const iconCircle = document.createElement('div');
                 iconCircle.className = 'link-icon-circle';
                 iconCircle.innerHTML = link.icon ? `<img src="${link.icon}">` : `<i class="fas fa-link" style="color:var(--accent-color)"></i>`;
 
-                const delBtn = document.createElement('button');
-                delBtn.className = 'delete-btn';
-                delBtn.innerHTML = '×';
-                delBtn.onclick = (e) => removeLink(e, index);
+                card.onclick = () => { 
+                    if(!isAdmin) {
+                        let targetUrl = link.url;
+                        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                            targetUrl = 'https://' + targetUrl;
+                        }
+                        window.open(targetUrl, '_blank');
+                    }
+                };
 
-                card.onclick = () => { if(!isAdmin) window.location.href = link.url; };
-
-                // کلیک راست برای باز شدن منوی ۵ گزینه‌ای
                 card.oncontextmenu = (e) => {
                     if(!isAdmin) return;
                     e.preventDefault();
@@ -250,19 +267,18 @@
                     menu.style.left = e.clientX + 'px';
                 };
 
-                // درگ و دراپ
                 if(isAdmin) {
                     row.addEventListener('dragstart', () => row.classList.add('dragging'));
                     row.addEventListener('dragend', () => row.classList.remove('dragging'));
                 }
 
-                row.appendChild(delBtn);
                 row.appendChild(card);
-                row.appendChild(iconCircle); // آیکون سمت راست قرار گرفت
+                row.appendChild(iconCircle);
                 container.appendChild(row);
             });
         }
 
+        // توابع ویرایش (تغییرات فقط روی tempLinks اعمال می‌شود)
         function triggerColor(type) {
             closeMenu();
             if(type === 'bg') document.getElementById('color-input').click();
@@ -270,25 +286,38 @@
         }
 
         function applyColor(type, val) {
-            if(type === 'bg') links[activeEditIndex].color = val;
-            else links[activeEditIndex].fontColor = val;
-            saveAndRefresh();
+            if(type === 'bg') tempLinks[activeEditIndex].color = val;
+            else tempLinks[activeEditIndex].fontColor = val;
+            renderLinks(tempLinks);
         }
 
         function editExistingLink(field) {
             closeMenu();
-            const link = links[activeEditIndex];
-            let msg = field === 'title' ? "عنوان جدید:" : (field === 'url' ? "آدرس جدید:" : "لینک تصویر آیکون:");
-            let val = prompt(msg, link[field] || "");
+            let val = prompt("مقدار جدید را وارد کنید:", tempLinks[activeEditIndex][field] || "");
             if(val !== null) {
-                link[field] = val;
-                saveAndRefresh();
+                tempLinks[activeEditIndex][field] = val;
+                renderLinks(tempLinks);
+            }
+        }
+
+        function deleteLink() {
+            closeMenu();
+            tempLinks.splice(activeEditIndex, 1);
+            renderLinks(tempLinks);
+        }
+
+        function addNewLink() {
+            const title = prompt("عنوان:");
+            const url = prompt("آدرس:", "https://");
+            if(title && url) {
+                tempLinks.push({title, url, icon: '', color: '#1e293b', fontColor: '#ffffff'});
+                renderLinks(tempLinks);
             }
         }
 
         function closeMenu() { document.getElementById('custom-menu').style.display = 'none'; }
 
-        // جابه‌جایی با کشیدن و رها کردن
+        // جابه‌جایی Drag & Drop روی tempLinks
         const container = document.getElementById('links-container');
         container.addEventListener('dragover', e => {
             if(!isAdmin) return;
@@ -304,28 +333,12 @@
             const newOrder = [];
             document.querySelectorAll('.link-row').forEach(row => {
                 const title = row.querySelector('.link-card span').innerText;
-                const found = links.find(l => l.title === title);
+                const found = tempLinks.find(l => l.title === title);
                 if(found) newOrder.push(found);
             });
-            links = newOrder;
-            saveAndRefresh();
+            tempLinks = newOrder;
         });
 
-        function addNewLink() {
-            const title = prompt("عنوان:");
-            const url = prompt("آدرس:", "https://");
-            if(title && url) {
-                links.push({title, url, icon: '', color: '#1e293b', fontColor: '#ffffff'});
-                saveAndRefresh();
-            }
-        }
-
-        function removeLink(e, index) {
-            e.stopPropagation();
-            if(confirm("آیا از حذف این لینک مطمئن هستید؟")) { links.splice(index, 1); saveAndRefresh(); }
-        }
-
-        function saveAndRefresh() { localStorage.setItem('myLinks', JSON.stringify(links)); renderLinks(); }
         function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس جدید:", document.getElementById('p-img').src); if(n) document.getElementById('p-img').src = n; }
         function editText(id) { if(!isAdmin) return; const v = prompt("متن جدید:", document.getElementById(id).innerText); if(v) document.getElementById(id).innerText = v; }
 
