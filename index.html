@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه شخصی - ویرایش حرفه‌ای</title>
+    <title>صفحه شخصی - مدیریت کامل</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -35,11 +35,10 @@
 
         .profile-img { 
             width: 100px; height: 100px; border-radius: 50%; 
-            border: 3px solid var(--accent-color); margin-bottom: 15px; 
-            object-fit: cover;
+            margin-bottom: 15px; object-fit: cover; border: none;
         }
         
-        .edit-mode .profile-img { border: 3px dashed var(--accent-color); cursor: pointer; }
+        .edit-mode .profile-img { cursor: pointer; opacity: 0.8; }
 
         .links-wrapper { 
             display: flex; flex-direction: column; gap: 15px; 
@@ -47,22 +46,22 @@
         }
         
         .link-row {
-            display: flex; align-items: center; gap: 12px;
+            display: flex; align-items: center; gap: 15px;
             width: 100%; justify-content: center; position: relative;
         }
 
         .link-card {
-            background-color: var(--card-bg); color: white; text-decoration: none;
+            color: white; text-decoration: none;
             padding: 12px 25px; border-radius: 12px; display: flex; align-items: center;
             justify-content: center; min-width: 150px; width: fit-content;
-            transition: 0.2s; cursor: pointer; border: 1px solid transparent;
+            transition: 0.2s; cursor: pointer;
         }
 
         .link-icon-circle {
             width: 45px; height: 45px; border-radius: 50%;
             background: var(--card-bg); overflow: hidden;
             display: flex; align-items: center; justify-content: center;
-            border: 2px solid var(--accent-color); flex-shrink: 0;
+            border: none; flex-shrink: 0;
         }
 
         .link-icon-circle img { width: 100%; height: 100%; object-fit: cover; }
@@ -84,18 +83,13 @@
             border: 1px solid #334155; flex-direction: column; gap: 8px; z-index: 10000;
         }
 
-        input {
-            background: #0f172a; border: 1px solid #334155; color: white;
-            padding: 8px; border-radius: 4px; outline: none; font-size: 13px;
-        }
-
         .action-btn {
             background: var(--accent-color); color: #000; border: none;
             padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
         }
 
         .delete-btn {
-            display: none; position: absolute; left: -30px; 
+            display: none; position: absolute; left: -35px; 
             background: #ef4444; color: white; border-radius: 50%;
             width: 22px; height: 22px; border: none; cursor: pointer;
             align-items: center; justify-content: center; font-size: 14px;
@@ -110,16 +104,23 @@
         .save-exit-btn { background: var(--success-color); margin-bottom: 50px; }
         .edit-mode .add-btn, .edit-mode .save-exit-btn { display: block; }
 
-        /* پالت رنگ کلیک راست */
-        #color-picker {
+        /* منوی کلیک راست سفارشی */
+        #custom-menu {
             display: none; position: fixed; background: #1e293b;
-            border: 1px solid var(--accent-color); padding: 5px;
-            border-radius: 8px; z-index: 10002; grid-template-columns: repeat(4, 1fr); gap: 5px;
+            border: 1px solid #334155; border-radius: 8px; z-index: 10002;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); overflow: hidden; min-width: 150px;
         }
-        .color-dot { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 1px solid #ffffff44; }
+        .menu-item {
+            padding: 10px 15px; color: white; cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; gap: 10px; transition: 0.2s;
+        }
+        .menu-item:hover { background: #334155; color: var(--accent-color); }
+        .menu-item i { width: 16px; text-align: center; }
+
+        #color-input, #font-color-input { display: none; }
     </style>
 </head>
-<body id="main-body" onclick="closeColorPicker()">
+<body id="main-body" onclick="closeMenu()">
 
     <div id="admin-bar">حالت ویرایش فعال است</div>
 
@@ -137,12 +138,21 @@
     <div id="admin-trigger" onclick="toggleBox('login-box')"></div>
     
     <div id="login-box" onclick="event.stopPropagation()">
-        <input type="password" id="u-field" placeholder="رمز ۱">
-        <input type="password" id="p-field" placeholder="رمز ۲">
+        <input type="password" id="u-field" placeholder="رمز ۱" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:4px;">
+        <input type="password" id="p-field" placeholder="رمز ۲" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:4px;">
         <button class="action-btn" onclick="processLogin()">ورود</button>
     </div>
 
-    <div id="color-picker"></div>
+    <div id="custom-menu">
+        <div class="menu-item" onclick="editExistingLink('title')"><i class="fas fa-edit"></i> تغییر عنوان</div>
+        <div class="menu-item" onclick="editExistingLink('url')"><i class="fas fa-link"></i> تغییر لینک</div>
+        <div class="menu-item" onclick="editExistingLink('icon')"><i class="fas fa-image"></i> تغییر آیکون</div>
+        <div class="menu-item" onclick="triggerColor('bg')"><i class="fas fa-palette"></i> تغییر رنگ باکس</div>
+        <div class="menu-item" onclick="triggerColor('font')"><i class="fas fa-font"></i> تغییر رنگ فونت</div>
+    </div>
+
+    <input type="color" id="color-input" onchange="applyColor('bg', this.value)">
+    <input type="color" id="font-color-input" onchange="applyColor('font', this.value)">
 
     <script>
         let isAdmin = false;
@@ -155,32 +165,14 @@
         };
 
         let links = JSON.parse(localStorage.getItem('myLinks')) || [
-            { title: 'اینستاگرام', url: 'https://instagram.com', icon: '', color: '#1e293b' }
+            { title: 'اینستاگرام', url: 'https://instagram.com', icon: '', color: '#1e293b', fontColor: '#ffffff' }
         ];
-
-        const colors = ['#1e293b', '#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];
 
         function init() {
             document.getElementById('user-name').innerText = profileData.name;
             document.getElementById('user-bio').innerText = profileData.bio;
             document.getElementById('p-img').src = profileData.img;
-            setupColorPicker();
             renderLinks();
-        }
-
-        function setupColorPicker() {
-            const picker = document.getElementById('color-picker');
-            colors.forEach(c => {
-                const dot = document.createElement('div');
-                dot.className = 'color-dot';
-                dot.style.background = c;
-                dot.onclick = () => {
-                    links[activeEditIndex].color = c;
-                    saveAndRefresh();
-                    closeColorPicker();
-                };
-                picker.appendChild(dot);
-            });
         }
 
         window.addEventListener('keydown', (e) => {
@@ -224,13 +216,16 @@
                 row.className = 'link-row';
                 row.draggable = isAdmin;
 
+                // آیکون سمت راست
                 const iconCircle = document.createElement('div');
                 iconCircle.className = 'link-icon-circle';
                 iconCircle.innerHTML = link.icon ? `<img src="${link.icon}">` : `<i class="fas fa-link"></i>`;
 
+                // باکس لینک
                 const card = document.createElement('div');
                 card.className = 'link-card';
-                card.style.backgroundColor = link.color;
+                card.style.backgroundColor = link.color || '#1e293b';
+                card.style.color = link.fontColor || '#ffffff';
                 card.innerHTML = `<span>${link.title}</span>`;
                 
                 const delBtn = document.createElement('button');
@@ -239,19 +234,19 @@
                 delBtn.onclick = (e) => removeLink(e, index);
 
                 card.onclick = () => { 
-                    if(isAdmin) editExistingLink(index);
-                    else window.location.href = link.url;
+                    if(!isAdmin) window.location.href = link.url;
                 };
 
-                // کلیک راست برای تغییر رنگ
+                // منوی کلیک راست جدید
                 card.oncontextmenu = (e) => {
                     if(!isAdmin) return;
                     e.preventDefault();
+                    e.stopPropagation();
                     activeEditIndex = index;
-                    const picker = document.getElementById('color-picker');
-                    picker.style.display = 'grid';
-                    picker.style.top = e.clientY + 'px';
-                    picker.style.left = e.clientX + 'px';
+                    const menu = document.getElementById('custom-menu');
+                    menu.style.display = 'block';
+                    menu.style.top = e.clientY + 'px';
+                    menu.style.left = e.clientX + 'px';
                 };
 
                 if(isAdmin) {
@@ -261,12 +256,39 @@
 
                 row.appendChild(delBtn);
                 row.appendChild(card);
-                row.appendChild(iconCircle);
+                row.appendChild(iconCircle); // اضافه شدن به انتهای ردیف (سمت راست)
                 container.appendChild(row);
             });
         }
 
-        // منطق جابه‌جایی
+        // توابع تغییر رنگ حرفه‌ای
+        function triggerColor(type) {
+            if(type === 'bg') document.getElementById('color-input').click();
+            else document.getElementById('font-color-input').click();
+        }
+
+        function applyColor(type, val) {
+            if(type === 'bg') links[activeEditIndex].color = val;
+            else links[activeEditIndex].fontColor = val;
+            saveAndRefresh();
+        }
+
+        function editExistingLink(field) {
+            const link = links[activeEditIndex];
+            let val;
+            if(field === 'title') val = prompt("عنوان جدید:", link.title);
+            if(field === 'url') val = prompt("آدرس جدید:", link.url);
+            if(field === 'icon') val = prompt("لینک تصویر آیکون:", link.icon);
+            
+            if(val !== null) {
+                link[field] = val;
+                saveAndRefresh();
+            }
+        }
+
+        function closeMenu() { document.getElementById('custom-menu').style.display = 'none'; }
+
+        // سایر توابع مدیریت
         const container = document.getElementById('links-container');
         container.addEventListener('dragover', e => {
             if(!isAdmin) return;
@@ -292,19 +314,8 @@
         function addNewLink() {
             const title = prompt("عنوان:");
             const url = prompt("آدرس:", "https://");
-            const icon = prompt("لینک آیکون (اختیاری):");
             if(title && url) {
-                links.push({title, url, icon, color:'#1e293b'});
-                saveAndRefresh();
-            }
-        }
-
-        function editExistingLink(index) {
-            const t = prompt("عنوان جدید:", links[index].title);
-            const u = prompt("آدرس جدید:", links[index].url);
-            const i = prompt("آیکون جدید:", links[index].icon || "");
-            if(t && u) {
-                links[index].title = t; links[index].url = u; links[index].icon = i;
+                links.push({title, url, icon: '', color: '#1e293b', fontColor: '#ffffff'});
                 saveAndRefresh();
             }
         }
@@ -314,7 +325,6 @@
             if(confirm("حذف؟")) { links.splice(index, 1); saveAndRefresh(); }
         }
 
-        function closeColorPicker() { document.getElementById('color-picker').style.display = 'none'; }
         function saveAndRefresh() { localStorage.setItem('myLinks', JSON.stringify(links)); renderLinks(); }
         function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس:", document.getElementById('p-img').src); if(n) document.getElementById('p-img').src = n; }
         function editText(id) { if(!isAdmin) return; const v = prompt("متن:", document.getElementById(id).innerText); if(v) document.getElementById(id).innerText = v; }
