@@ -3,127 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه شخصی</title>
+    <title>صفحه شخصی | نسخه ابری</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #ffffff;
-            --accent-color: #38bdf8;
-            --success-color: #22c55e;
-            --danger-color: #ef4444;
+            --bg-color: #0f172a; --card-bg: #1e293b; --text-color: #ffffff;
+            --accent-color: #38bdf8; --success-color: #22c55e; --danger-color: #ef4444;
         }
-
         body {
-            font-family: Tahoma, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex; flex-direction: column; align-items: center;
-            padding: 20px; margin: 0; min-height: 100vh;
+            font-family: Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-color);
+            display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; min-height: 100vh;
         }
-
         #admin-bar {
-            display: none; width: 100%; background: var(--success-color);
-            color: white; text-align: center; padding: 10px 0;
-            position: fixed; top: 0; left: 0; z-index: 10001; font-weight: bold;
+            display: none; width: 100%; background: var(--success-color); color: white;
+            text-align: center; padding: 10px 0; position: fixed; top: 0; left: 0; z-index: 10001; font-weight: bold;
         }
-
-        .profile-container { 
-            text-align: center; width: 100%; max-width: 600px; 
-            margin-top: 60px; display: flex; flex-direction: column; align-items: center;
-        }
-
-        .profile-img { 
-            width: 100px; height: 100px; border-radius: 50%; 
-            margin-bottom: 15px; object-fit: cover; border: none !important;
-        }
-        
-        .edit-mode .profile-img { cursor: pointer; opacity: 0.8; }
-
-        .links-wrapper { 
-            display: flex; flex-direction: column; gap: 15px; 
-            width: 100%; align-items: center; margin-top: 20px;
-        }
-        
-        .link-row {
-            display: flex; align-items: center; gap: 12px;
-            width: 100%; justify-content: center; position: relative;
-        }
-
+        .profile-container { text-align: center; width: 100%; max-width: 600px; margin-top: 60px; display: flex; flex-direction: column; align-items: center; }
+        .profile-img { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px; object-fit: cover; }
+        .edit-mode .profile-img { cursor: pointer; opacity: 0.8; border: 2px dashed var(--accent-color); }
+        .links-wrapper { display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center; margin-top: 20px; }
+        .link-row { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: center; }
         .link-card {
-            color: white; text-decoration: none;
-            padding: 12px 25px; border-radius: 12px; display: flex; align-items: center;
-            justify-content: center; min-width: 180px; width: fit-content;
-            transition: 0.2s; cursor: pointer; border: none;
-            font-weight: bold;
+            color: white; text-decoration: none; padding: 12px 25px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; min-width: 180px;
+            width: fit-content; transition: 0.2s; cursor: pointer; font-weight: bold;
         }
-
         .link-icon-circle {
-            width: 45px; height: 45px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05); overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
-            border: none; flex-shrink: 0; transition: 0.2s;
+            width: 45px; height: 45px; border-radius: 50%; background: rgba(255, 255, 255, 0.05);
+            overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        .edit-mode .link-icon-circle:hover { background: rgba(255, 255, 255, 0.15); border: 1px dashed var(--accent-color) !important; }
-
-        .link-icon-circle img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-        .edit-controls {
-            display: none; flex-direction: column; gap: 10px; width: 220px; margin-top: 30px; margin-bottom: 50px;
-        }
+        .edit-mode .link-icon-circle { cursor: pointer; border: 1px dashed var(--accent-color); }
+        .link-icon-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .edit-controls { display: none; flex-direction: column; gap: 10px; width: 220px; margin-top: 30px; }
         .edit-mode .edit-controls { display: flex; }
-
-        .control-btn {
-            border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s;
-        }
-        .add-btn { background: #475569; }
+        .control-btn { border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; }
         .save-btn { background: var(--success-color); }
-        .cancel-btn { background: var(--danger-color); }
-
-        /* منوی کلیک چپ */
+        .add-btn { background: #475569; }
         #custom-menu {
-            display: none; position: fixed; background: #1e293b;
-            border: 1px solid #475569; border-radius: 8px; z-index: 10002;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); overflow: hidden; min-width: 180px;
+            display: none; position: fixed; background: #1e293b; border: 1px solid #475569;
+            border-radius: 8px; z-index: 10002; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 180px;
         }
-        .menu-item {
-            padding: 12px 15px; color: white; cursor: pointer; font-size: 13px;
-            display: flex; align-items: center; gap: 10px; transition: 0.2s; border-bottom: 1px solid #334155;
-            text-align: right;
-        }
-        .menu-item:last-child { border-bottom: none; }
-        .menu-item:hover { background: #334155; color: var(--accent-color); }
-
-        /* ورود مخفی */
-        #admin-trigger {
-            display: none; position: fixed; bottom: 20px; left: 20px;
-            width: 15px; height: 15px; background: rgba(255,255,255,0.1);
-            border-radius: 50%; cursor: pointer; z-index: 9999;
-        }
-        #login-box {
-            display: none; position: fixed; bottom: 45px; left: 20px;
-            background: #1e293b; padding: 12px; border-radius: 8px;
-            border: 1px solid #334155; flex-direction: column; gap: 8px; z-index: 10000;
-        }
-
+        .menu-item { padding: 12px 15px; color: white; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #334155; }
+        #admin-trigger { display: none; position: fixed; bottom: 20px; left: 20px; width: 15px; height: 15px; background: rgba(255,255,255,0.1); border-radius: 50%; cursor: pointer; z-index: 9999; }
+        #login-box { display: none; position: fixed; bottom: 45px; left: 20px; background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; flex-direction: column; gap: 8px; }
         #color-input, #font-color-input { display: none; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 20000; display: none; }
     </style>
 </head>
-<body id="main-body" onclick="closeMenu()">
+<body onclick="closeMenu()">
 
-    <div id="admin-bar">حالت ویرایش فعال است</div>
+    <div id="loading-overlay">در حال همگام‌سازی با ابر...</div>
+    <div id="admin-bar">حالت ویرایش فعال (ذخیره مستقیم در ابر)</div>
 
     <div class="profile-container">
         <img id="p-img" src="https://via.placeholder.com/100" class="profile-img" onclick="editProfilePic()">
-        <p id="user-bio" onclick="editText('user-bio')">توضیحات کوتاه</p>
+        <p id="user-bio" onclick="editText('user-bio')">در حال بارگذاری...</p>
 
         <div id="links-container" class="links-wrapper"></div>
         
         <div class="edit-controls">
             <button class="control-btn add-btn" onclick="addNewLink()">+ افزودن لینک جدید</button>
-            <button class="control-btn save-btn" onclick="finalizeChanges()">ذخیره نهایی و خروج</button>
-            <button class="control-btn cancel-btn" onclick="cancelChanges()">لغو تغییرات</button>
+            <button class="control-btn save-btn" onclick="saveToCloud()">ذخیره نهایی در ابر</button>
+            <button class="control-btn" style="background:var(--danger-color)" onclick="location.reload()">لغو و خروج</button>
         </div>
     </div>
 
@@ -135,187 +76,117 @@
     </div>
 
     <div id="custom-menu" onclick="event.stopPropagation()">
-        <div class="menu-item" onclick="editExistingLink('title')"><i class="fas fa-font"></i> تغییر عنوان</div>
-        <div class="menu-item" onclick="editExistingLink('url')"><i class="fas fa-link"></i> تغییر لینک</div>
-        <div class="menu-item" onclick="triggerColor('bg')"><i class="fas fa-fill-drip"></i> تغییر رنگ باکس</div>
-        <div class="menu-item" onclick="triggerColor('font')"><i class="fas fa-tint"></i> تغییر رنگ متن</div>
-        <div class="menu-item danger" onclick="deleteLink()"><i class="fas fa-trash"></i> حذف باکس</div>
+        <div class="menu-item" onclick="editExistingLink('title')">تغییر عنوان</div>
+        <div class="menu-item" onclick="editExistingLink('url')">تغییر لینک</div>
+        <div class="menu-item" onclick="triggerColor('bg')">رنگ باکس</div>
+        <div class="menu-item" onclick="triggerColor('font')">رنگ متن</div>
+        <div class="menu-item" style="color:var(--danger-color)" onclick="deleteLink()">حذف باکس</div>
     </div>
 
     <input type="color" id="color-input" onchange="applyColor('bg', this.value)">
     <input type="color" id="font-color-input" onchange="applyColor('font', this.value)">
 
     <script>
+        const BIN_ID = "69e8fc39856a6821895fd5e9";
+        const MASTER_KEY = "$2a$10$C477fRdbRWNM149jx3.CnOblDtx4pWNOqxvVhpZUfpANLGm8oWC7u";
+        
         let isAdmin = false;
         let activeEditIndex = null;
-        
-        let profileData = JSON.parse(localStorage.getItem('profileData')) || {
-            bio: "توضیحات کوتاه", img: "https://via.placeholder.com/100"
-        };
-        let links = JSON.parse(localStorage.getItem('myLinks')) || [
-            { title: 'اینستاگرام', url: 'https://instagram.com', icon: '', color: '#1e293b', fontColor: '#ffffff' }
-        ];
+        let cloudData = { profile: { bio: "نام و بیوگرافی شما", img: "https://via.placeholder.com/100" }, links: [] };
 
-        let tempLinks = [];
-
-        function init() {
-            document.getElementById('user-bio').innerText = profileData.bio;
-            document.getElementById('p-img').src = profileData.img;
-            renderLinks(links);
+        async function loadFromCloud() {
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { "X-Master-Key": MASTER_KEY }
+                });
+                const json = await res.json();
+                cloudData = json.record;
+                renderUI();
+            } catch (e) { alert("خطا در بارگذاری اطلاعات از ابر"); }
         }
 
-        window.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyL') {
-                document.getElementById('admin-trigger').style.display = 'block';
-            }
-        });
-
-        function toggleBox(id) {
-            const box = document.getElementById(id);
-            box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
-        }
-
-        function processLogin() {
-            const storedU = localStorage.getItem('adminU') || "100";
-            const storedP = localStorage.getItem('adminP') || "200";
-            if (document.getElementById('u-field').value === storedU && 
-                document.getElementById('p-field').value === storedP) {
-                isAdmin = true;
-                tempLinks = JSON.parse(JSON.stringify(links));
-                document.body.classList.add('edit-mode');
-                document.getElementById('admin-bar').style.display = 'block';
-                document.getElementById('login-box').style.display = 'none';
-                renderLinks(tempLinks);
-            } else {
-                // اگر رمز اشتباه باشد باکس مخفی می‌شود
-                document.getElementById('login-box').style.display = 'none';
-                alert("رمز اشتباه است");
-            }
-        }
-
-        function renderLinks(dataArray) {
+        function renderUI() {
+            document.getElementById('user-bio').innerText = cloudData.profile.bio;
+            document.getElementById('p-img').src = cloudData.profile.img;
             const container = document.getElementById('links-container');
             container.innerHTML = '';
-            dataArray.forEach((link, index) => {
+            cloudData.links.forEach((link, index) => {
                 const row = document.createElement('div');
                 row.className = 'link-row';
-
-                const card = document.createElement('div');
-                card.className = 'link-card';
-                card.style.backgroundColor = link.color || '#1e293b';
-                card.style.color = link.fontColor || '#ffffff';
-                card.innerHTML = `<span>${link.title}</span>`;
-                
-                const iconCircle = document.createElement('div');
-                iconCircle.className = 'link-icon-circle';
-                if(link.icon && link.icon.trim() !== "") {
-                    iconCircle.innerHTML = `<img src="${link.icon}" onerror="this.parentElement.innerHTML=''">`;
-                }
-
-                // هندل کردن کلیک چپ
-                card.onclick = (e) => { 
-                    if(isAdmin) {
-                        e.stopPropagation();
-                        openLinkMenu(e, index);
-                    } else {
-                        let targetUrl = link.url;
-                        if (!/^https?:\/\//i.test(targetUrl)) targetUrl = 'https://' + targetUrl;
-                        window.open(targetUrl, '_blank');
-                    }
-                };
-
-                // تغییر آیکون فقط با کلیک روی خود دایره آیکون
-                iconCircle.onclick = (e) => {
-                    if(isAdmin) {
-                        e.stopPropagation();
-                        const n = prompt("لینک تصویر آیکون جدید:", tempLinks[index].icon || "");
-                        if(n !== null) {
-                            tempLinks[index].icon = n;
-                            renderLinks(tempLinks);
-                        }
-                    }
-                };
-
-                // غیرفعال کردن کلیک راست
-                row.oncontextmenu = (e) => e.preventDefault();
-
-                row.appendChild(card);
-                row.appendChild(iconCircle);
+                row.innerHTML = `
+                    <div class="link-card" style="background:${link.color}; color:${link.fontColor}" onclick="handleLinkClick(${index}, event)">
+                        <span>${link.title}</span>
+                    </div>
+                    <div class="link-icon-circle" onclick="handleIconClick(${index}, event)">
+                        ${link.icon ? `<img src="${link.icon}">` : ''}
+                    </div>
+                `;
                 container.appendChild(row);
             });
         }
 
-        function openLinkMenu(e, index) {
-            activeEditIndex = index;
-            const menu = document.getElementById('custom-menu');
-            menu.style.display = 'block';
-            menu.style.top = e.clientY + 'px';
-            menu.style.left = e.clientX + 'px';
-        }
-
-        function finalizeChanges() {
-            links = JSON.parse(JSON.stringify(tempLinks));
-            profileData = {
-                bio: document.getElementById('user-bio').innerText,
-                img: document.getElementById('p-img').src
-            };
-            localStorage.setItem('myLinks', JSON.stringify(links));
-            localStorage.setItem('profileData', JSON.stringify(profileData));
-            isAdmin = false;
-            document.body.classList.remove('edit-mode');
-            document.getElementById('admin-bar').style.display = 'none';
-            renderLinks(links);
-        }
-
-        function cancelChanges() {
-            if(!confirm("لغو تغییرات؟")) return;
-            isAdmin = false;
-            document.body.classList.remove('edit-mode');
-            document.getElementById('admin-bar').style.display = 'none';
-            init();
-        }
-
-        function triggerColor(type) {
-            closeMenu();
-            if(type === 'bg') document.getElementById('color-input').click();
-            else document.getElementById('font-color-input').click();
-        }
-
-        function applyColor(type, val) {
-            if(type === 'bg') tempLinks[activeEditIndex].color = val;
-            else tempLinks[activeEditIndex].fontColor = val;
-            renderLinks(tempLinks);
-        }
-
-        function editExistingLink(field) {
-            closeMenu();
-            let val = prompt("مقدار جدید:", tempLinks[activeEditIndex][field] || "");
-            if(val !== null) {
-                tempLinks[activeEditIndex][field] = val;
-                renderLinks(tempLinks);
+        function handleLinkClick(index, e) {
+            if (isAdmin) {
+                activeEditIndex = index;
+                const menu = document.getElementById('custom-menu');
+                menu.style.display = 'block';
+                menu.style.top = e.clientY + 'px';
+                menu.style.left = e.clientX + 'px';
+            } else {
+                window.open(cloudData.links[index].url, '_blank');
             }
         }
 
-        function deleteLink() {
-            closeMenu();
-            tempLinks.splice(activeEditIndex, 1);
-            renderLinks(tempLinks);
+        function handleIconClick(index, e) {
+            if (!isAdmin) return;
+            e.stopPropagation();
+            const n = prompt("لینک آیکون جدید:", cloudData.links[index].icon || "");
+            if (n !== null) { cloudData.links[index].icon = n; renderUI(); }
         }
 
+        async function saveToCloud() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
+                    body: JSON.stringify(cloudData)
+                });
+                alert("تغییرات با موفقیت در ابر ذخیره شد!");
+                location.reload();
+            } catch (e) { alert("خطا در ذخیره‌سازی"); }
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+
+        function processLogin() {
+            if (document.getElementById('u-field').value === "100" && document.getElementById('p-field').value === "200") {
+                isAdmin = true;
+                document.body.classList.add('edit-mode');
+                document.getElementById('admin-bar').style.display = 'block';
+                document.getElementById('login-box').style.display = 'none';
+            } else { alert("رمز اشتباه"); document.getElementById('login-box').style.display = 'none'; }
+        }
+
+        // توابع کمکی ویرایش
         function addNewLink() {
             const title = prompt("عنوان:");
             const url = prompt("آدرس:", "https://");
             if(title && url) {
-                tempLinks.push({title, url, icon: '', color: '#1e293b', fontColor: '#ffffff'});
-                renderLinks(tempLinks);
+                cloudData.links.push({title, url, icon: '', color: '#1e293b', fontColor: '#ffffff'});
+                renderUI();
             }
         }
-
+        function deleteLink() { cloudData.links.splice(activeEditIndex, 1); renderUI(); closeMenu(); }
+        function editExistingLink(field) { const v = prompt("مقدار جدید:", cloudData.links[activeEditIndex][field]); if(v!==null) cloudData.links[activeEditIndex][field]=v; renderUI(); closeMenu(); }
+        function triggerColor(type) { activeColorType = type; document.getElementById(type === 'bg' ? 'color-input' : 'font-color-input').click(); }
+        function applyColor(type, val) { if(type==='bg') cloudData.links[activeEditIndex].color=val; else cloudData.links[activeEditIndex].fontColor=val; renderUI(); }
+        function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس:", cloudData.profile.img); if(n) { cloudData.profile.img=n; renderUI(); } }
+        function editText(id) { if(!isAdmin) return; const v = prompt("متن جدید:", cloudData.profile.bio); if(v) { cloudData.profile.bio=v; renderUI(); } }
+        function toggleBox(id) { const b = document.getElementById(id); b.style.display = b.style.display==='flex'?'none':'flex'; }
         function closeMenu() { document.getElementById('custom-menu').style.display = 'none'; }
-        function editProfilePic() { if(!isAdmin) return; const n = prompt("لینک عکس جدید:", document.getElementById('p-img').src); if(n) document.getElementById('p-img').src = n; }
-        function editText(id) { if(!isAdmin) return; const v = prompt("متن جدید:", document.getElementById(id).innerText); if(v) document.getElementById(id).innerText = v; }
+        window.addEventListener('keydown', e => { if(e.ctrlKey && e.altKey && e.shiftKey && e.code==='KeyL') document.getElementById('admin-trigger').style.display='block'; });
 
-        init();
+        loadFromCloud();
     </script>
 </body>
 </html>
