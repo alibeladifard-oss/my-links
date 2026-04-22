@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تست حالت ویرایش</title>
+    <title>تست ورود و ویرایش</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -19,18 +19,13 @@
             color: var(--text-color);
             display: flex; flex-direction: column; align-items: center;
             padding: 20px; margin: 0; min-height: 100vh;
-            transition: background 0.5s;
         }
-
-        /* تغییر رنگ پس‌زمینه برای تشخیص حالت ادیت */
-        body.edit-mode { background-color: #1e293b; }
 
         #admin-bar {
             display: none; width: 100%; background: #22c55e;
             color: white; text-align: center; padding: 10px 0;
-            position: fixed; top: 0; left: 0; z-index: 9999; font-weight: bold;
+            position: fixed; top: 0; left: 0; z-index: 10001; font-weight: bold;
         }
-        body.edit-mode #admin-bar { display: block; }
 
         .profile-container { text-align: center; width: 100%; max-width: 400px; margin-top: 50px; }
         .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent-color); margin-bottom: 15px; }
@@ -42,21 +37,39 @@
             justify-content: center; gap: 10px; position: relative;
         }
 
-        /* دایره تست */
+        /* دایره کوچک */
         #admin-trigger {
             display: none; position: fixed; bottom: 20px; left: 20px;
-            width: 20px; height: 20px; background: red; /* قرمز گذاشتم که کاملاً دیده شود */
-            border-radius: 50%; cursor: pointer; z-index: 10000;
+            width: 15px; height: 15px; background: rgba(255,255,255,0.2);
+            border-radius: 50%; cursor: pointer; z-index: 9999;
+        }
+
+        /* باکس ورود */
+        #login-box {
+            display: none; position: fixed; bottom: 45px; left: 20px;
+            background: #1e293b; padding: 12px; border-radius: 8px;
+            border: 1px solid #334155; flex-direction: column; gap: 8px; z-index: 10000;
+        }
+
+        #login-box input {
+            background: #0f172a; border: 1px solid #334155; color: white;
+            padding: 8px; border-radius: 4px; outline: none; width: 140px;
+        }
+
+        .login-btn {
+            background: var(--accent-color); color: #000; border: none;
+            padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
         }
 
         /* استایل‌های ویرایش */
-        .edit-mode .editable { border: 2px dashed #38bdf8; padding: 5px; cursor: pointer; margin: 5px 0; }
+        .edit-mode #admin-bar { display: block; }
+        .edit-mode .editable { border: 2px dashed var(--accent-color); padding: 5px; cursor: pointer; }
         
         .delete-btn {
             display: none; position: absolute; right: -10px; top: -10px;
             background: #ef4444; color: white; border-radius: 50%;
             width: 25px; height: 25px; border: none; cursor: pointer;
-            z-index: 100; font-weight: bold;
+            z-index: 100;
         }
         .edit-mode .delete-btn { display: flex; align-items: center; justify-content: center; }
 
@@ -70,40 +83,60 @@
 </head>
 <body>
 
-    <div id="admin-bar">✅ شما در حالت ویرایش هستید</div>
+    <div id="admin-bar">✅ حالت ویرایش فعال شد</div>
 
     <div class="profile-container">
         <img src="https://via.placeholder.com/100" class="profile-img">
-        <h1 id="user-name" class="editable" onclick="editText('user-name')">نام شما (کلیک برای تغییر)</h1>
-        <p id="user-bio" class="editable" onclick="editText('user-bio')">توضیحات (کلیک برای تغییر)</p>
+        <h1 id="user-name" class="editable" onclick="editText('user-name')">نام شما</h1>
+        <p id="user-bio" class="editable" onclick="editText('user-bio')">توضیحات کوتاه</p>
 
         <div id="links-container" class="links-wrapper"></div>
         <button class="add-btn" onclick="addNewLink()">+ افزودن لینک جدید</button>
     </div>
 
-    <div id="admin-trigger" onclick="activateAdmin()"></div>
+    <div id="admin-trigger" onclick="toggleLoginBox()"></div>
+    
+    <div id="login-box">
+        <input type="password" id="u-field" placeholder="1">
+        <input type="password" id="p-field" placeholder="2">
+        <button class="login-btn" onclick="processLogin()">Login</button>
+    </div>
 
     <script>
         let isAdmin = false;
-        let links = JSON.parse(localStorage.getItem('testLinks')) || [
+        let links = JSON.parse(localStorage.getItem('myLinks')) || [
             { title: 'اینستاگرام', url: '#', icon: 'fa-instagram', color: '#1e293b' }
         ];
 
-        // ۱. شورتکات دایره قرمز را نشان می‌دهد
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.altKey && e.shiftKey && e.code === 'KeyL') {
-                document.getElementById('admin-trigger').style.display = 'block';
-                console.log("Shortcut detected - Circle should be visible");
+                const trg = document.getElementById('admin-trigger');
+                trg.style.display = (trg.style.display === 'block') ? 'none' : 'block';
             }
         });
 
-        // ۲. کلیک روی دایره مستقیماً ادمین می‌کند
-        function activateAdmin() {
-            isAdmin = true;
-            document.body.classList.add('edit-mode');
-            document.getElementById('admin-trigger').style.display = 'none';
-            renderLinks();
-            console.log("Admin activated");
+        function toggleLoginBox() {
+            const box = document.getElementById('login-box');
+            box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function processLogin() {
+            const u = document.getElementById('u-field').value;
+            const p = document.getElementById('p-field').value;
+
+            if (u === "100" && p === "200") {
+                isAdmin = true;
+                document.body.classList.add('edit-mode');
+                document.getElementById('login-box').style.display = 'none';
+                document.getElementById('admin-trigger').style.display = 'none';
+                renderLinks();
+            } else {
+                // اگر اشتباه بود باکس غیب شود
+                document.getElementById('login-box').style.display = 'none';
+                document.getElementById('admin-trigger').style.display = 'none';
+                document.getElementById('u-field').value = '';
+                document.getElementById('p-field').value = '';
+            }
         }
 
         function renderLinks() {
@@ -118,8 +151,8 @@
                     <button class="delete-btn" onclick="removeLink(event, ${index})">×</button>
                 `;
                 div.onclick = () => { 
-                    if(isAdmin) editLink(index);
-                    else alert("در حالت عادی لینک باز می‌شود");
+                    if(isAdmin) editExistingLink(index);
+                    else if(link.url !== "#") window.location.href = link.url;
                 };
                 container.appendChild(div);
             });
@@ -127,34 +160,35 @@
 
         function editText(id) {
             if(!isAdmin) return;
-            const val = prompt("متن جدید را وارد کنید:");
+            const val = prompt("تغییر متن:", document.getElementById(id).innerText);
             if(val) document.getElementById(id).innerText = val;
         }
 
         function addNewLink() {
-            const t = prompt("عنوان لینک:");
-            if(t) {
-                links.push({title: t, url: '#', color: '#1e293b'});
-                save();
+            const t = prompt("عنوان:");
+            const u = prompt("آدرس:", "https://");
+            if(t && u) {
+                links.push({title:t, url:u, color:'#1e293b'});
+                saveAndRefresh();
             }
         }
 
         function removeLink(e, index) {
             e.stopPropagation();
-            links.splice(index, 1);
-            save();
+            if(confirm("حذف؟")) { links.splice(index, 1); saveAndRefresh(); }
         }
 
-        function editLink(index) {
+        function editExistingLink(index) {
             const t = prompt("عنوان جدید:", links[index].title);
             if(t) {
                 links[index].title = t;
-                save();
+                links[index].url = prompt("آدرس جدید:", links[index].url);
+                saveAndRefresh();
             }
         }
 
-        function save() {
-            localStorage.setItem('testLinks', JSON.stringify(links));
+        function saveAndRefresh() {
+            localStorage.setItem('myLinks', JSON.stringify(links));
             renderLinks();
         }
 
